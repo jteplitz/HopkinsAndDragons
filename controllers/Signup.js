@@ -34,6 +34,7 @@
 
         console.log("saving with id", data[1]);
         var user = new self.schemas.User({
+          email: userData.email,
           firstName: userData.firstName,
           lastName: userData.lastName,
           salt: data[0].salt,

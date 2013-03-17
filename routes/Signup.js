@@ -33,7 +33,7 @@
         return next(500);
       }
 
-      req.session.loggedIn = true;
+      req.session.valid    = true;
       req.session.user     = user;
       res.redirect("/games");
     });
