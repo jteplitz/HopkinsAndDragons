@@ -1,8 +1,15 @@
+(function(){
+  "use strict";
 
-/*
- * GET home page.
- */
+  var Routes = {
+    Root: require("./Root.js")
+  };
 
-exports.index = function(req, res){
-  res.render('index', { title: 'Express' });
-};
+  // route, function, mongo, conf, auth, methods
+  // auth level: 0 = not required, 1 = required
+  var routeList = [
+    ["/",              Routes.Root, 0, 0, 0, ["get"]]
+  ];
+
+  exports.routes = routeList;
+}());
