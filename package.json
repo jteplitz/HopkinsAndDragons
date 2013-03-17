@@ -11,6 +11,7 @@
     "async": "0.2.x",
     "jade": "0.28.x",
     "nconf": "0.6.x",
-    "less-middleware": "0.1.x"
+    "less-middleware": "0.1.x",
+    "mongoose": "3.5.x"
   }
 }

@@ -8,11 +8,14 @@ var express = require('express'),
     http = require('http'),
     schemas = require("./app/schemas.js"),
     auth    = require("./app/auth.js"),
+    mongoose = require("mongoose"),
     conf      = require('nconf').argv().env().file({file: __dirname + '/config.json'}),
     _ = require("underscore"),
     path = require('path');
 
 var app = express();
+
+mongoose.connect(conf.get("mongo"));
 
 app.configure(function(){
   app.set('port', process.env.PORT || 3000);
@@ -48,12 +51,12 @@ _.each(routeList.routes, function(route){
     if (route[3]){
       params.push(function(req, res, next){
         req._conf = conf;
+        next();
       });
     }
 
     params.push(auth(conf, route[4]));
 
-    console.log("adding", route[0], route[1]);
     app[method](route[0], params, route[1]);
   });
 });

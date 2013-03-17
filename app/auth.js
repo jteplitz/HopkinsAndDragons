@@ -4,6 +4,15 @@
   var handler;
 
   handler = function(conf, level){
+    if (level === -1){
+      return function(req, res, next){
+        res.loggedIn = req.session.valid  || false;
+        if (res.loggedIn){
+          return res.redirect("/");
+        }
+        next();
+      };
+    }
     if (level === 0){
       return function(req, res, next){
         res.loggedIn = req.session.valid || false;

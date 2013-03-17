@@ -1,0 +1,12 @@
+{
+  "mongo": "mongodb://localhost/dragons",
+  "crypto": {
+    "iterations": 2,
+    "keylen": 20
+  },
+  "monotonic": {
+    "url": "api.monotonic.io",
+    "email": "jteplitz602@gmail.com",
+    "password": "thisbetternotbeplaintext"
+  }
+}

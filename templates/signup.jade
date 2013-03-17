@@ -1,0 +1,31 @@
+extends layout
+
+block content
+  h1.pageTitle Signup
+
+  p Fill out the short form below to start playing!
+  br
+  form.form-horizontal(method="POST")
+    .row-fluid
+      .span9
+        .row-fluid
+          .span6
+            .control-group
+              label.control-label(for="firstName") First Name:
+              .controls
+                input(name="firstName", type="text", tabindex="1") 
+            .control-group
+              label.control-label(for="email") Email:
+              .controls
+                input(name="email", type="text", tabindex="3")
+          .span6
+            .control-group
+              label.control-label(for="lastName") Last Name:
+              .controls
+                input(name="lastName", type="text", tabindex="2")
+            .control-group
+              label.control-label(for="password") Password:
+              .controls
+                input(name="password", type="password", tabindex="4")
+        .form-actions
+          button.btn.btn-success(type="submit") Signup
