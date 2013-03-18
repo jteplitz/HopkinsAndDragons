@@ -1,0 +1,35 @@
+extends layout
+
+block scripts
+  script(type="text/javascript", src="/javascripts/games.js")
+
+block content
+  h2.pageTitle Your active games
+
+  ul#games
+    for game in games
+      ul.game
+        a(href="/game/#{game._id}") #{game.name}
+    if games.length === 0
+      p Awwww. You have no active games. 
+    
+  a#newGame.btn.btn-success Create a new game
+
+  #newGameModal.modal.hide.fade(role="dialog")
+    .modal-header
+      a.close(data-dismiss="modal") &times;
+      h3 New Game
+
+    .modal-body
+      form.form-horizontal(method="POST")
+        .control-group
+          label.control-label(for="name") Game Name: 
+          .controls
+            input(type="text", name="name")
+
+         // there will be more options here like
+          selecting a pre-made map
+          adding players
+        .form-actions
+          button.btn.btn-success(type="submit") Create
+          button.btn(data-dismiss="modal") Cancel
