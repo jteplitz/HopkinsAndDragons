@@ -13,8 +13,6 @@
     }, {auth: conf.get("monotonic:password")}, "json", function(err, data){
       if (err){ cb(err) }
 
-      console.log("got monotonic response", data);
-
       cb(false, data.result);
     });
   };

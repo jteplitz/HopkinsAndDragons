@@ -5,6 +5,7 @@
       _        = require("underscore"),
 
       Schema   = mongoose.Schema,
+      Mixed    = Schema.Types.Mixed,
 
       validateEmail, validatePresenceOf;
 
@@ -26,6 +27,14 @@
     _id: Number
   });
 
+  var Game = new Schema({
+    name: String,
+    players: [Number],
+    owner: Number,
+    map: Mixed
+  });
+
   exports.User = mongoose.model("User", User);
+  exports.Game = mongoose.model("Game", Game);
 
 }());
