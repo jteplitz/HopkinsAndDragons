@@ -3,12 +3,17 @@
 
   var base = require("./base.js"),
       ViewClass = require("../views/EditGame.js"),
-      
-      _         = require("underscore"),
+      _    = require("underscore"),
+      async = require("async"),
 
-      EditGameCtrl, _ptype;
+      EditGameCtrl, _ptype,
+      getGame, getBasePieces;
 
-  EditGameCtrl = function(schemas, gameId){
+  EditGameCtrl = function(user, gameId, schemas){
+    this.user    = user;
+    this.gameId  = gameId;
+    this.schemas = schemas;
+
     this.payload = {title: ""};
     this._view   = new ViewClass();
   };
@@ -16,19 +21,59 @@
   _ptype = EditGameCtrl.prototype = base.getProto("std");
   _ptype._name = "EditGame";
 
+
   _ptype.prePrep = function(data, cb){
-    this.schemas.game.findOne({_id: this.gameId}, function(err, game){
-      if (err){ return cb(err) }
+    var self = this;
+    async.parallel({
+      game: getGame(self),
+      basePieces: getBasePieces(self)
+      }, function(err, asyncData){
+        if (err){ return cb(err) }
 
-      if (_.isUndefined(game) || _.isNull(game)){
-        console.log("game 404");
-        return cb({msg: "No such game"});
-      }
-
-      data.game = game;
-      cb();
+        _.extend(data, asyncData);
+        cb();
     });
   };
 
+  getGame = function(self){
+    return function(cb){
+      self.schemas.Game.findOne({_id: self.gameId}, function(err, game){
+        if (err){ return cb(err) }
+
+        if (_.isUndefined(game) || _.isNull(game)){
+          return cb({msg: "No such game"});
+        }
+
+        if (game.owner !== self.user._id){ return cb({status: 401}) }
+
+        cb(null, game);
+      });
+    };
+  };
+
+  getBasePieces = function(self){
+    return function(cb){
+      self.schemas.BaseMapPiece.find({}, cb);
+    };
+  };
+
+  _ptype.addMapPiece = function(data, cb){
+    var self = this;
+    // get the game
+    this.schemas.Game.findOne({_id: this.gameId}, function(err, game){
+      if (err){ return cb(err) }
+
+      
+      var mapPiece = new self.schemas.MapPiece({
+        basePiece: data.basePiece,
+        x: data.x,
+        y: data.y
+      });
+      game.map.push(mapPiece);
+      game.save(function(err){
+        cb(err, mapPiece);
+      });
+    });
+  };
   module.exports = EditGameCtrl;
 }());

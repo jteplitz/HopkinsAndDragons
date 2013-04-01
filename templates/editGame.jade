@@ -1,4 +1,27 @@
 extends layout
 
+block scripts
+  script(type="text/javascript")
+    dragons.basePieces = !{JSON.stringify(basePieces)};
+    dragons.map        = !{JSON.stringify(game.map)};
+  script(type="text/javascript", src="/javascripts/edit_map.js")
+  script(type="text/javascript", src="/javascripts/canvas.js")
+
+block styles
+  link(rel="stylesheet", href="/stylesheets/edit_map.css")
+
 block content
   h2.pageTitle #{game.name}
+
+  h3 Edit Map
+
+  .mapPieces
+    .row-fluid
+      .span5
+        for piece in basePieces
+          img.basePiece(height="50px", width="50px", src="#{piece.image}", data-id="#{piece._id}")
+      .span3
+        h4 Pieces
+        p You can click and drag these onto the map
+
+   canvas#map(width="800px", height="500px")

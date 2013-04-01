@@ -1,0 +1,6 @@
+.basePiece.dragging {
+  position: absolute;
+}
+#map {
+  border: 1px solid black;
+}

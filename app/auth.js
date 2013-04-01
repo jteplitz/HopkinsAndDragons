@@ -27,6 +27,14 @@
         }
         next();
       };
+    } else if (level === 2){
+      return function(req, res, next){
+        res.loggedIn = req.session.valid || false;
+        if (!req.session.valid || !req.session.user.admin){
+          return next(401);
+        }
+        next();
+      };
     }
   };
 

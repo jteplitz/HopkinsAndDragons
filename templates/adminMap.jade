@@ -1,0 +1,36 @@
+extends layout
+
+block styles
+  link(rel="stylesheet", href="/stylesheets/admin_map.css")
+
+block content
+  h2.pageTitle Add map pieces
+  form.form-horizontal(method="POST", enctype="multipart/form-data")
+    .control-group
+      label.control-label(for="mapFile") Map Image:
+      .controls
+        input(type="file", accept="image/*", name="mapFile")
+    .control-group
+      label.control-label Doors:
+
+    .doors
+      .control-group
+        label.control-label(for="doorLeft") Left:
+        .controls
+          input(type="checkbox", name="doorLeft")
+      .control-group
+        label.control-label(for="doorRight") Right:
+        .controls
+          input(type="checkbox", name="doorRight")
+      .control-group
+        label.control-label(for="doorTop") Top:
+        .controls
+          input(type="checkbox", name="doorTop")
+      .control-group
+        label.control-label(for="doorBottom") Bottom:
+        .controls
+          input(type="checkbox", name="doorBottom")
+
+    .clear
+    .form-actions
+      button.btn.btn-success(type="submit") Add
