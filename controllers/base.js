@@ -3,6 +3,7 @@
 
   var async = require('async'),
       _     = require('underscore'),
+      conf      = require('nconf').argv().env().file({file: __dirname + '/../config.json'}),
 
       prep, renderView, getName, getView, getSubctrls, doPrePrep, doPrep, doPostPrep,
 
@@ -73,6 +74,9 @@
 
   renderView = function base_ctrl_render_view( res, data, cb ) {
     var self = this;
+    // append globals to conf data
+    data.globals = JSON.stringify(conf.get("gameGlobals"));
+    console.log("globals", conf.get("gameGlobals"));
     this.prep( res, data, function( err, final_data ) {
       if (err){
         console.log("prep error", err);

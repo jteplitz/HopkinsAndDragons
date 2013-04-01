@@ -6,6 +6,7 @@
 
       Schema   = mongoose.Schema,
       Mixed    = Schema.Types.Mixed,
+      ObjectId = Schema.Types.ObjectId,
 
       validateEmail, validatePresenceOf;
 
@@ -24,17 +25,33 @@
     email: {type: String, validate: [validateEmail, "a valid email is required"], index: {unique: true}},
     password: {type: String, validate: [validatePresenceOf, "a password is required"]},
     salt: String,
-    _id: Number
+    _id: Number,
+    admin: {type: Boolean, "default": false}
+  });
+
+  var BaseMapPiece = new Schema({
+    image: String,
+    doorLeft: Boolean,
+    doorRight: Boolean,
+    doorTop: Boolean,
+    doorBottom: Boolean
+  });
+
+  var MapPiece = new Schema({
+    basePiece: Object,
+    x: Number,
+    y: Number
   });
 
   var Game = new Schema({
     name: String,
     players: [Number],
     owner: Number,
-    map: Mixed
+    map: [MapPiece]
   });
 
-  exports.User = mongoose.model("User", User);
-  exports.Game = mongoose.model("Game", Game);
-
+  exports.User         = mongoose.model("User", User);
+  exports.Game         = mongoose.model("Game", Game);
+  exports.BaseMapPiece = mongoose.model("BaseMapPiece", BaseMapPiece);
+  exports.MapPiece     = mongoose.model("MapPiece", MapPiece);
 }());
