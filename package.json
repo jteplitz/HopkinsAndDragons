@@ -12,6 +12,7 @@
     "jade": "0.28.x",
     "nconf": "0.6.x",
     "less-middleware": "0.1.x",
-    "mongoose": "3.5.x"
+    "mongoose": "3.5.x",
+    "aws-sdk": "0.9.x"
   }
 }

@@ -1,7 +1,8 @@
 (function(){
   "use strict";
 
-  var _ = require("underscore"),
+  var _  = require("underscore"),
+      fs = require("fs"),
                     handleGet,
                     handlePost,
                     handler, dispatch,
@@ -9,7 +10,7 @@
           ControllerClass = require("../controllers/AdminMap.js");
 
   handleGet = function(req, res, next){
-    var control = new ControllerClass();
+    var control = new ControllerClass(req._schemas, req._conf);
 
     var params = {messages: req.session.messages};
 
@@ -17,9 +18,10 @@
   };
 
   handlePost = function(req, res, next){
-    var control = new ControllerClass(req._schemas);
+    console.log('got file', req.files.mapFile);
+    var control = new ControllerClass(req._schemas, req._conf);
     var pieceInfo = {
-      image: '/upload/' + req.files.mapFile.path.replace(/^.*[\\\/]/, ''),
+      image: fs.readFileSync(__dirname + '/../public/upload/' + req.files.mapFile.path.replace(/^.*[\\\/]/, '')),
       doorLeft: _.has(req.body, "doorLeft"),
       doorRight: _.has(req.body, "doorRight"),
       doorTop: _.has(req.body, "doorTop"),
