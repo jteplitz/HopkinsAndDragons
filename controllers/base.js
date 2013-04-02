@@ -80,7 +80,7 @@
     this.prep( res, data, function( err, final_data ) {
       if (err){
         console.log("prep error", err);
-        if (_.has(err.statusCode)){
+        if (_.has(err, "statusCode")){
           return res.render("errors/" + err.statusCode, _.extend(data, {status: err.statusCode, title: String(err.statusCode)}));
         }
         res.render("errors/500", _.extend(data, {status: 500, title: "500"}));
