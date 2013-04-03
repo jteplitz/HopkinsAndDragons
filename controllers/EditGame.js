@@ -75,5 +75,18 @@
       });
     });
   };
+
+  _ptype.updateMapPiece = function(pieceId, data, cb){
+    var self = this;
+    this.schemas.Game.findOne({_id: self.gameId}, function(err, game){
+      var piece = game.map.id(pieceId);
+      for (var updateProperty in data){
+        if (data.hasOwnProperty(updateProperty)){
+          piece[updateProperty] = data[updateProperty];
+        }
+      }
+      game.save(cb);
+    });
+  };
   module.exports = EditGameCtrl;
 }());
