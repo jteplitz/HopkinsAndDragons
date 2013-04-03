@@ -27,13 +27,14 @@
   };
 
   dragons.gameElements = {
-    element: function(width, height, x, y){
+    element: function(width, height, x, y, id){
       this.width   = width;
       this.height  = height;
       this.x       = x;
       this.y       = y;
       this.dx      = 0;
       this.dy      = 0;
+      this._id     = id;
 
       this.update = function(){
         this.x += this.dx;
@@ -41,12 +42,19 @@
       };
     },
 
-    image: function(image, width, height, x, y){
-      dragons.gameElements.element.call(this, width, height, x, y);
+    image: function(image, width, height, x, y, rotate, id){
+      dragons.gameElements.element.call(this, width, height, x, y, id);
       this.image = image;
+      this.rotate = (!_.isUndefined(rotate)) ? rotate : 0;
 
       this.draw = function(ctx){
-        ctx.drawImage(this.image, this.x, this.y);
+        ctx.save();
+
+        ctx.translate(this.x + (this.width / 2), this.y + (this.height / 2));
+        ctx.rotate(this.rotate *  (Math.PI / 2));
+        ctx.drawImage(this.image, -this.width / 2, -this.height / 2);
+
+        ctx.restore();
       };
     }
   };

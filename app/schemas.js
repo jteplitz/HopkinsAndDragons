@@ -40,7 +40,8 @@
   var MapPiece = new Schema({
     basePiece: Object,
     x: Number,
-    y: Number
+    y: Number,
+    rotate: Number
   });
 
   var Game = new Schema({

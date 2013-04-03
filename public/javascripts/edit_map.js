@@ -3,10 +3,11 @@
   "use strict";
 
   // globals
-  var dragging = false, canvas;
+  var dragging = false, canvas, selectedPiece;
 
   // functions
-  var startDragging, dragPiece, stopDragging, placePiece, main, restoreMap, addPiece;
+  var startDragging, dragPiece, stopDragging, placePiece, main, restoreMap, addPiece,
+      selectPiece, rotatePiece;
 
   $(document).ready(function(){
     //$(".basePiece").on("drag", startDragging);
@@ -14,6 +15,7 @@
     $(".basePiece").on("mousedown", startDragging);
     $(document).on("mouseup", ".dragging", stopDragging);
     $(".basePiece").on("dragstart", function(e){ e.preventDefault() }); // prevent browser dragging from getting in the way
+    $("#rotatePiece").on("click", rotatePiece);
 
     canvas = new dragons.canvas($("#map")[0]);
     
@@ -61,7 +63,8 @@
 
   // place a new piece on the map
   placePiece = function(piece, e){
-    var divideWidth = dragons.globals.map.roomWidth, divideHeight = dragons.globals.map.roomHeight;
+    var divideWidth = dragons.globals.map.roomWidth, divideHeight = dragons.globals.map.roomHeight,
+        canvasElement;
 
     // get position relative to canvas
     var pieceX = e.pageX - $("#map").offset().left,
@@ -92,7 +95,8 @@
     // add the image to the canvas
     var mapImage = new Image(), tempPiece = this;
     mapImage.onload = function(){
-      addPiece(mapImage, mapPiece)();
+      canvasElement = addPiece(mapImage, mapPiece)();
+      selectPiece(canvasElement);
       piece.remove();
     };
     mapImage.src = piece.attr("src");
@@ -111,7 +115,8 @@
           console.log(data.err);
           return alert("unable to save map");
         }
-        mapPiece._id = data._id;
+        mapPiece._id = data.piece._id;
+        canvasElement._id = data.piece._id;
       }
     });
   };
@@ -120,22 +125,33 @@
     canvas.update();
   };
 
+  // selects a piece. Just sets a var for now, but will add color and stuff later
+  selectPiece = function(piece){
+    selectedPiece = piece;
+  };
+
   // a synchronous function that casts the map pieces and places them back in the
   restoreMap = function(){
     for (var i = 0; i < dragons.map.length; i++){
       var pieceImage = new Image();
-      pieceImage.onload = addPiece(pieceImage, dragons.map[i]);
+      pieceImage.onload = addPiece(pieceImage, dragons.map[i], dragons.map[i]._id);
       pieceImage.src = dragons.map[i].basePiece.image;
     }
   };
 
   // adds a loaded piece to the canvas
-  addPiece = function(image, mapPiece){
+  addPiece = function(image, mapPiece, id){
     return function(){
       var piece = new dragons.gameElements.image(image, dragons.globals.map.roomWidth, dragons.globals.map.roomHeight,
-                                                 mapPiece.x, mapPiece.y);
+                                                 mapPiece.x, mapPiece.y, mapPiece.rotate, id);
       canvas.addElement(piece);
+      return piece;
     };
   };
 
+  // rotates the selected piece
+  rotatePiece = function(){
+    selectedPiece.rotate++;
+    selectedPiece.rotate = selectedPiece.rotate % 3;
+  };
 }());
