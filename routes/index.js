@@ -14,13 +14,13 @@
   // route, function, mongo, conf, auth, methods
   // auth level: -1 = guest only, 0 = not required, 1 = required
   var routeList = [
-    ["/",                Routes.Root,      0, 0, 0,     ["get"        ]],
-    ["/signup",          Routes.Signup,    1, 1, -1,    ["get", "post"]],
-    ["/login",           Routes.Login,     1, 1, -1,    ["get", "post"]],
-    ["/logout",          Routes.Logout,    0, 0, 1,     ["get"        ]],
-    ["/games",           Routes.Games,     1, 0, 1,     ["get", "post"]],
-    ["/game/edit/:id",   Routes.EditGame,  1, 0, 1,     ["get", "post"]],
-    ["/admin/map",       Routes.AdminMap,  1, 1, 2,     ["get", "post"]]
+    ["/",                Routes.Root,      0, 0, 0,     ["get"               ]],
+    ["/signup",          Routes.Signup,    1, 1, -1,    ["get", "post"       ]],
+    ["/login",           Routes.Login,     1, 1, -1,    ["get", "post"       ]],
+    ["/logout",          Routes.Logout,    0, 0, 1,     ["get"               ]],
+    ["/games",           Routes.Games,     1, 0, 1,     ["get", "post"       ]],
+    ["/game/edit/:id",   Routes.EditGame,  1, 0, 1,     ["get", "post", "put"]],
+    ["/admin/map",       Routes.AdminMap,  1, 1, 2,     ["get", "post"       ]]
   ];
 
   exports.routes = routeList;

@@ -28,13 +28,14 @@
 
   dragons.gameElements = {
     element: function(width, height, x, y, id){
-      this.width   = width;
-      this.height  = height;
-      this.x       = x;
-      this.y       = y;
-      this.dx      = 0;
-      this.dy      = 0;
-      this._id     = id;
+      this.width     = width;
+      this.height    = height;
+      this.x         = x;
+      this.y         = y;
+      this.dx        = 0;
+      this.dy        = 0;
+      this._id       = id;
+      this.outOfSync = false;
 
       this.update = function(){
         this.x += this.dx;
@@ -56,7 +57,22 @@
 
         ctx.restore();
       };
+    },
+    colorBlock: function(color, width, height, x, y){ // a rectangle of a color
+      dragons.gameElements.element.call(this, width, height, x, y, null);
+      this.color = color;
+
+      this.draw = function(ctx){
+        ctx.save();
+
+        ctx.globalAlpha = 0.7;
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+
+        ctx.restore();
+      };
     }
   };
+  
 
 }());
