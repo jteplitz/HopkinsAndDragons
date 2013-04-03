@@ -1,1 +1,1 @@
-KhUe6Ns3arpFHMKMh5q6EQfnSH6mhcOplrhwKCxm
+web: node app.js
