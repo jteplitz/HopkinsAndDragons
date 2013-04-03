@@ -7,7 +7,7 @@
 
   // functions
   var startDragging, dragPiece, stopDragging, placePiece, main, restoreMap, addPiece,
-      selectPiece, rotatePiece,
+      selectPiece, deselectPiece, rotatePiece, deletePiece,
       sync, syncError, syncSuccess,
       handleMapClick,
 
@@ -21,6 +21,7 @@
     $(document).on("mouseup", ".dragging", stopDragging);
     $(".basePiece").on("dragstart", function(e){ e.preventDefault() }); // prevent browser dragging from getting in the way
     $("#rotatePiece").on("click", rotatePiece);
+    $("#deletePiece").on("click", deletePiece);
 
     $("#map").click(handleMapClick);
 
@@ -159,7 +160,17 @@
 
   // selects a piece. Just sets a var for now, but will add color and stuff later
   selectPiece = function(piece){
+    deselectPiece();
 
+    // draw a color block around the selected piece
+    var selectBlock = new dragons.gameElements.colorBlock("#4AD8FF", piece.width, piece.height, piece.x, piece.y);
+    selectBlock.selectedBlock = true;
+    canvas.elements.unshift(selectBlock);
+
+    selectedPiece = piece;
+  };
+
+  deselectPiece = function(){
     // remove last selected block
     for (var i = 0; i < canvas.elements.length; i++){
       if (canvas.elements[i] instanceof dragons.gameElements.colorBlock && canvas.elements[i].selectedBlock){
@@ -167,12 +178,6 @@
         i--;
       }
     }
-    // draw a color block around the selected piece
-    var selectBlock = new dragons.gameElements.colorBlock("#4AD8FF", piece.width, piece.height, piece.x, piece.y);
-    selectBlock.selectedBlock = true;
-    canvas.elements.unshift(selectBlock);
-
-    selectedPiece = piece;
   };
 
   // a synchronous function that casts the map pieces and places them back in the
@@ -201,6 +206,41 @@
     selectedPiece.outOfSync = true;
   };
 
+  deletePiece = function(){
+    $.ajax({
+      url: window.location.pathname,
+      type: "DELETE",
+      dataType: "json",
+      data: {type: "room", id: selectedPiece._id},
+      failure: function(err){
+        console.log("delete error", err);
+        alert ("Unable to delete room");
+      },
+      success: function(data){
+        if (data.error !== 0){
+          console.log("delete error", data);
+          alert ("Unable to delete room");
+        }
+      }
+    });
+
+    for (var i = 0; i < dragons.map.length; i++){
+      if (dragons.map[i]._id === selectedPiece._id){
+        dragons.map.splice(i, 1);
+        break;
+      }
+    }
+
+    for (i = 0; i < canvas.elements.length; i++){
+      if (canvas.elements[i]._id === selectedPiece._id){
+        canvas.elements.splice(i, 1);
+        break;
+      }
+    }
+
+    deselectPiece();
+  };
+
   handleMapClick = function(e){
     // figure out which element they clicked on
     for (var i = 0; i < canvas.elements.length; i++){
@@ -221,7 +261,7 @@
 
   syncSuccess = function(element){
     return function(data){
-      if (data.err !== 0){
+      if (data.error !== 0){
         console.log("error syncing data", data);
         return alert("Problem saving data. We're on it!");
       }

@@ -3,10 +3,10 @@
 
   var _ = require("underscore"),
       handleGet,
-      handlePost, handlePut,
+      handlePost, handlePut, handleDelete,
       handler, dispatch,
 
-      addRoom, updateRoom,
+      addRoom, updateRoom, deleteRoom,
 
       ControllerClass = require("../controllers/EditGame.js");
 
@@ -85,8 +85,32 @@
       }
     });
   };
+
+  handleDelete = function(req, res, next){
+    var deleteRoutes = {
+      room: deleteRoom
+    };
+
+    if (_.has(deleteRoutes, req.body.type)){
+      deleteRoutes[req.body.type](req, res, next);
+    } else {
+      next(400);
+    }
+  };
+
+  deleteRoom = function(req, res, next){
+    var controller = new ControllerClass(req.session.user, req.params.id, req._schemas);
+    controller.deleteMapPiece(req.body.id, function(err){
+      if (err){
+        console.log("database save error", err);
+        res.json({error: err, msg: "database save error"});
+      } else {
+        res.json({error: 0});
+      }
+    });
+  };
   
-  dispatch = {GET: handleGet, POST: handlePost, PUT: handlePut};
+  dispatch = {GET: handleGet, POST: handlePost, PUT: handlePut, DELETE: handleDelete};
   handler = function(req, res, next){
     if (_.has(dispatch, req.method)){
       return dispatch[req.method](req, res, next);

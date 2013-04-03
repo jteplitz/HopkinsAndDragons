@@ -88,5 +88,16 @@
       game.save(cb);
     });
   };
+
+  _ptype.deleteMapPiece = function(pieceId, cb){
+    this.schemas.Game.findOne({_id: this.gameId}, function(err, game){
+      var piece = game.map.id(pieceId);
+      if (_.isNull(piece)){
+        return cb({error: 404, msg: "No such piece"});
+      }
+      piece.remove();
+      game.save(cb);
+    });
+  };
   module.exports = EditGameCtrl;
 }());
