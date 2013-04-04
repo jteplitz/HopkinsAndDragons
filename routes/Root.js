@@ -9,6 +9,9 @@
           ControllerClass = require("../controllers/Root.js");
 
   handleGet = function(req, res, next){
+    if (res.loggedIn){
+      return res.redirect("/games");
+    }
     var control = new ControllerClass();
 
     var params = {};

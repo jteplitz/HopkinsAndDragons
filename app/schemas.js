@@ -38,7 +38,11 @@
   });
 
   var MapPiece = new Schema({
-    basePiece: Object,
+    image: String,
+    doorLeft: Boolean,
+    doorRight: Boolean,
+    doorTop: Boolean,
+    doorBottom: Boolean,
     x: Number,
     y: Number,
     rotate: Number

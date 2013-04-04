@@ -7,7 +7,7 @@
       async = require("async"),
 
       EditGameCtrl, _ptype,
-      getGame, getBasePieces;
+      getGame, getBasePieces, getBasePiece;
 
   EditGameCtrl = function(user, gameId, schemas){
     this.user    = user;
@@ -57,20 +57,27 @@
     };
   };
 
-  _ptype.addMapPiece = function(data, cb){
+  _ptype.addMapPiece = function(pieceData, cb){
     var self = this;
-    // get the game
-    this.schemas.Game.findOne({_id: this.gameId}, function(err, game){
+
+    async.parallel({
+      game: getGame(self),
+      basePiece: function(cb){ getBasePiece(self.schemas, pieceData.basePiece, cb) }
+    }, function(err, data){
       if (err){ return cb(err) }
 
-      
       var mapPiece = new self.schemas.MapPiece({
-        basePiece: data.basePiece,
-        x: data.x,
-        y: data.y
+        image: data.basePiece.image,
+        doorLeft: data.basePiece.doorLeft,
+        doorRight: data.basePiece.doorRight,
+        doorTop: data.basePiece.doorTop,
+        doorBottom: data.basePiece.doorBottom,
+        x: pieceData.x,
+        y: pieceData.y,
+        rotate: pieceData.rotate
       });
-      game.map.push(mapPiece);
-      game.save(function(err){
+      data.game.map.push(mapPiece);
+      data.game.save(function(err){
         cb(err, mapPiece);
       });
     });
@@ -98,6 +105,10 @@
       piece.remove();
       game.save(cb);
     });
+  };
+
+  getBasePiece = function(schemas, pieceId, cb){
+    schemas.BaseMapPiece.findOne({_id: pieceId}, cb);
   };
   module.exports = EditGameCtrl;
 }());

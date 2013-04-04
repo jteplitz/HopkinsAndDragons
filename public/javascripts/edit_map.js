@@ -118,9 +118,10 @@
       return alert("Serious problem");
     }
     var mapPiece = {
-      basePiece: basePiece,
+      basePiece: basePiece._id,
       x: pieceX,
-      y: pieceY
+      y: pieceY,
+      rotate: 0
     };
 
     dragons.map.push(mapPiece);
