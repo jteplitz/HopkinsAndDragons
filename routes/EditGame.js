@@ -44,11 +44,12 @@
   };
 
   addRoom = function(req, res, next){
-    if (!(_.has(req.body, "basePiece")) ||
-        !(_.has(req.body, "x"))         ||
-        !(_.has(req.body, "y"))){
-          return next(400);
-        }
+    var required = ["basePiece", "x", "y", "rotate"];
+    for (var i = 0; i < required.length; i++){
+      if (!_.has(req.body, required[i])){
+        return res.json(400, {error: 400, msg: required[i] + " is required"});
+      }
+    }
 
     var controller = new ControllerClass(req.session.user, req.params.id, req._schemas);
     var mapPiece = {
