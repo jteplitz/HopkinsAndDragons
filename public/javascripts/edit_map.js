@@ -125,8 +125,16 @@
   };
 
   stopDragging = function(e){
+    var divideWidth = dragons.globals.map.roomWidth, divideHeight = dragons.globals.map.roomHeight;
+    var pieceX = e.pageX - $("#map").offset().left,
+        pieceY = e.pageY - $("#map").offset().top;
+
+    // place it in the proper place
+    pieceX = Math.round((pieceX / divideWidth)) * divideWidth;
+    pieceY = Math.round((pieceY / divideHeight)) * divideHeight;
+
     dragging = false;
-    if (dragons.utils.detectMouseOver($("#map"), e)){
+    if (dragons.utils.detectMouseOver($("#map"), e) && !checkPiece(pieceX, pieceY)){
       placePiece($(this), e);
     } else { // fly the temp piece away
       $(".dragging").animate({
@@ -172,6 +180,7 @@
       console.log("well, that went seriously wrong");
       return alert("Serious problem");
     }
+
     var mapPiece = {
       basePiece: basePiece._id,
       doorLeft: basePiece.doorLeft,
@@ -212,6 +221,14 @@
         canvasElement._id = data.piece._id;
       }
     });
+
+    if (mapPiece.x >= $("#map").width() - 150){
+      $("#map")[0].width = ($("#map").width() + 200);
+    }
+    
+    if (mapPiece.y >= $("#map").height() + 150){
+      $("#map")[0].height = ($("#map").height() + 200);
+    }
   };
 
   main = function(){
@@ -307,6 +324,15 @@
         break;
       }
     }
+
+    for (i = 0; i < mapPieces.length; i++){
+      if (mapPieces[i]._id === selectedPiece._id){
+        mapPieces.splice(i, 1);
+        break;
+      }
+    }
+
+    delete dragons.organizedMap[selectedPiece.x][selectedPiece.y];
 
     deselectPiece();
   };
