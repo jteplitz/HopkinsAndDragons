@@ -1,10 +1,6 @@
 .basePiece.dragging {
   position: absolute;
 }
-#map {
-  border: 1px solid black;
-  float: left;
-}
 .tools {
   float: left;
   margin-left: 20px;
@@ -15,4 +11,5 @@
   height: 505px;
   overflow: scroll;
   float: left;
+  border: 1px solid black;
 }
