@@ -31,7 +31,6 @@
   };
 
   handlePut = function(req, res, next){
-    console.log("recieved put");
     var putRoutes = {
       room: updateRoom
     };
@@ -75,7 +74,11 @@
     var mapPiece = {
       x: req.body.x || null,
       y: req.body.y || null,
-      rotate: req.body.rotate || null
+      rotate: req.body.rotate || null,
+      doorLeft: (req.body.doorLeft === "true"),
+      doorRight: (req.body.doorRight === "true"),
+      doorTop: (req.body.doorTop === "true"),
+      doorBottom: (req.body.doorBottom === "true")
     };
 
     controller.updateMapPiece(req.body.id, mapPiece, function(err, piece){
