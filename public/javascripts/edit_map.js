@@ -1,18 +1,19 @@
-/*globals dragons _*/
-(function(){
+/*globals dragons _*/ (function(){
   "use strict";
 
   // globals
-  var dragging = false, canvas, selectedPiece;
+  var dragging = false, canvas, selectedPiece, mapPieces = [];
 
   // functions
   var startDragging, dragPiece, stopDragging, placePiece, main, restoreMap, addPiece,
-      selectPiece, deselectPiece, rotatePiece, deletePiece,
+      selectPiece, deselectPiece, rotatePiece, deletePiece, createOpenBlock,
+      checkPiece,
       sync, syncError, syncSuccess,
       handleMapClick,
 
       // classes
       RoomElement;
+
 
   $(document).ready(function(){
     //$(".basePiece").on("drag", startDragging);
@@ -41,7 +42,11 @@
           id: canvas.elements[i]._id,
           x: canvas.elements[i].x,
           y: canvas.elements[i].y,
-          rotate: canvas.elements[i].rotate
+          rotate: canvas.elements[i].rotate,
+          doorLeft: canvas.elements[i].doorLeft,
+          doorRight: canvas.elements[i].doorRight,
+          doorTop: canvas.elements[i].doorTop,
+          doorBottom: canvas.elements[i].doorBottom
         };
         $.ajax({
           url: window.location.pathname,
@@ -67,7 +72,49 @@
       $("body").append(piece);
 
       dragPiece(e);
+
+      // highlight available drop areas
+      for (var i = 0; i < mapPieces.length; i++){
+        var mapPiece = mapPieces[i];
+        // check for piece on left
+        if (mapPiece.doorLeft){
+          if(!checkPiece(mapPiece.x - dragons.globals.map.roomWidth, mapPiece.y)){
+            createOpenBlock(mapPiece.x - dragons.globals.map.roomWidth, mapPiece.y);
+          }
+        }
+
+        if (mapPiece.doorRight){
+          if (!checkPiece(mapPiece.x + dragons.globals.map.roomWidth, mapPiece.y)){
+            createOpenBlock(mapPiece.x + dragons.globals.map.roomWidth, mapPiece.y);
+          }
+        }
+
+        if (mapPiece.doorTop){
+          if (!checkPiece(mapPiece.x, mapPiece.y - dragons.globals.map.roomHeight)){
+            createOpenBlock(mapPiece.x, mapPiece.y - dragons.globals.map.roomHeight);
+          }
+        }
+
+        if (mapPiece.doorBottom){
+          if (!checkPiece(mapPiece.x, mapPiece.y + dragons.globals.map.roomHeight)){
+            createOpenBlock(mapPiece.x, mapPiece.y + dragons.globals.map.roomHeight);
+          }
+        }
+      }
     }
+  };
+
+  // checks if a room exists at a given location
+  checkPiece = function(x, y){
+    return (_.has(dragons.organizedMap, x) && _.has(dragons.organizedMap[x], y));
+  };
+
+  // highlights an available area on the map
+  createOpenBlock = function(x, y){
+    var openBlock = new dragons.gameElements.colorBlock("#00FF00", dragons.globals.map.roomWidth, dragons.globals.map.roomHeight,
+                                                                     x, y);
+    openBlock.open = true;
+    canvas.elements.push(openBlock);
   };
 
   dragPiece = function(e){
@@ -91,6 +138,14 @@
           $(this).remove();
         }
       });
+    }
+
+    // remove color blocks
+    for (var i = 0; i < canvas.elements.length; i++){
+      if ((canvas.elements[i] instanceof dragons.gameElements.colorBlock) && canvas.elements[i].open){
+        canvas.elements.splice(i, 1);
+        i--;
+      }
     }
   };
 
@@ -119,6 +174,10 @@
     }
     var mapPiece = {
       basePiece: basePiece._id,
+      doorLeft: basePiece.doorLeft,
+      doorRight: basePiece.doorRight,
+      doorBottom: basePiece.doorBottom,
+      doorTop: basePiece.doorTop,
       x: pieceX,
       y: pieceY,
       rotate: 0
@@ -186,7 +245,7 @@
     for (var i = 0; i < dragons.map.length; i++){
       var pieceImage = new Image();
       pieceImage.onload = addPiece(pieceImage, dragons.map[i], dragons.map[i]._id);
-      pieceImage.src = dragons.map[i].basePiece.image;
+      pieceImage.src = dragons.map[i].image;
     }
   };
 
@@ -194,8 +253,11 @@
   addPiece = function(image, mapPiece, id){
     return function(){
       var piece = new RoomElement(image, dragons.globals.map.roomWidth, dragons.globals.map.roomHeight,
-                                                 mapPiece.x, mapPiece.y, mapPiece.rotate, id);
+                                                 mapPiece.x, mapPiece.y, mapPiece.rotate, mapPiece.doorLeft, mapPiece.doorRight,
+                                                 mapPiece.doorTop, mapPiece.doorBottom, id);
       canvas.addElement(piece);
+      mapPieces.push(piece);
+      dragons.utils.buildMap(mapPieces); // organize the map object for easier editing access
       return piece;
     };
   };
@@ -204,6 +266,13 @@
   rotatePiece = function(){
     selectedPiece.rotate++;
     selectedPiece.rotate    = selectedPiece.rotate % 4;
+
+    var doorLeft = selectedPiece.doorLeft, doorRight = selectedPiece.doorRight;
+    selectedPiece.doorLeft = selectedPiece.doorBottom;
+    selectedPiece.doorRight = selectedPiece.doorTop;
+
+    selectedPiece.doorBottom = doorRight;
+    selectedPiece.doorTop  = doorLeft;
     selectedPiece.outOfSync = true;
   };
 
@@ -269,7 +338,12 @@
     };
   };
 
-  RoomElement = function(image, width, height, x, y, rotate, id){
+  RoomElement = function(image, width, height, x, y, rotate, doorLeft, doorRight, doorTop, doorBottom, id){
     dragons.gameElements.image.call(this, image, width, height, x, y, rotate, id);
+
+    this.doorLeft   = doorLeft;
+    this.doorRight  = doorRight;
+    this.doorTop    = doorTop;
+    this.doorBottom = doorBottom;
   };
 }());

@@ -1,4 +1,4 @@
-/*globals dragons*/
+/*globals dragons _*/
 (function(){
   "use strict";
  
@@ -21,6 +21,18 @@
               position.left < e.pageX                 &&
               position.top < e.pageY                  &&
               position.bottom > e.pageY);
+    },
+
+    buildMap: function(map){
+      dragons.organizedMap = {};
+      for (var i = 0; i < map.length; i++){
+        var mapPiece = map[i];
+        if (!_.has(dragons.organizedMap, mapPiece.x)){
+          dragons.organizedMap[mapPiece.x] = {};
+        }
+
+        dragons.organizedMap[mapPiece.x][mapPiece.y] = mapPiece;
+      }
     }
   };
 }());
