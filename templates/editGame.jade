@@ -24,7 +24,8 @@ block content
         h4 Pieces
         p You can click and drag these onto the map
   
-    canvas#map(width="800px", height="500px")
+    #canvasContainer
+      canvas#map(width="#{mapSize.width}px", height="#{mapSize.height}px")
 
     .tools
       h4 Piece Tools

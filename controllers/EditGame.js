@@ -30,7 +30,23 @@
       }, function(err, asyncData){
         if (err){ return cb(err) }
 
-        _.extend(data, asyncData);
+        var mapSize = {
+          height: 500,
+          width: 800
+        };
+        // get the map size
+        for (var i = 0; i < asyncData.game.map.length; i++){
+          var mapPiece = asyncData.game.map[i];
+          if (mapPiece.y > mapSize.height - 150){
+            mapSize.height += 200;
+          }
+
+          if (mapPiece.x > mapSize.width - 150){
+            mapSize.width += 200;
+          }
+        }
+
+        _.extend(data, asyncData, {mapSize: mapSize});
         cb();
     });
   };
