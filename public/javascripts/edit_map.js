@@ -14,6 +14,8 @@
       // classes
       RoomElement;
 
+  dragons.organizedMap = {};
+
 
   $(document).ready(function(){
     //$(".basePiece").on("drag", startDragging);
@@ -242,7 +244,7 @@
     // draw a color block around the selected piece
     var selectBlock = new dragons.gameElements.colorBlock("#4AD8FF", piece.width, piece.height, piece.x, piece.y);
     selectBlock.selectedBlock = true;
-    canvas.elements.unshift(selectBlock);
+    canvas.elements.push(selectBlock);
 
     selectedPiece = piece;
   };
@@ -255,6 +257,7 @@
         i--;
       }
     }
+    selectedPiece = null;
   };
 
   // a synchronous function that casts the map pieces and places them back in the
@@ -281,6 +284,8 @@
 
   // rotates the selected piece
   rotatePiece = function(){
+    if (_.isNull(selectedPiece)){ return }
+
     selectedPiece.rotate++;
     selectedPiece.rotate    = selectedPiece.rotate % 4;
 
@@ -294,6 +299,7 @@
   };
 
   deletePiece = function(){
+    if (_.isNull(selectedPiece)){ return }
     $.ajax({
       url: window.location.pathname,
       type: "DELETE",
@@ -346,6 +352,9 @@
         return;
       }
     }
+
+    // no hit
+    deselectPiece();
   };
 
   syncError = function(element){
