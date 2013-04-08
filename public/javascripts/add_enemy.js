@@ -11,7 +11,7 @@
   });
 
   addAttack = function(e){
-    var rowHtml = ["<tr>",
+    var rowHtml = ["<tr class='attack'>",
                    '<td><input class="attack_name" type="text"></td>',
                    '<td><input class="hit_percent" type="number"></td>',
                    '<td><input class="min_damage" type="number"></td>',
@@ -22,13 +22,21 @@
   };
 
   prepEnemy= function(){
-    var attack = {
-      name: $("#attack_name").val(),
-      min_damage: $("#min_damage").val(),
-      max_damage: $("#max_damage").val(),
-      hit_chance: $("#hit_percent").val()
-    };
+    var attacks = $("tr.attack"), attacksData = [];
 
-    //$(".attacks").append("<li>
+    for (var i = 0; i < attacks.length; i++){
+      var attack = attacks[i];
+      attacksData.push({
+        name: $(attack).find(".attack_name").val(),
+        hit_percent: $(attack).find(".hit_percent").val(),
+        min_damage: $(attack).find(".min_damage").val(),
+        max_damage: $(attack).find(".max_damage").val()
+      });
+    }
+
+    attacksData = JSON.stringify(attacksData);
+    var attacksInput = $("<input type='hidden' name='attacks'>");
+    attacksInput.val(attacksData);
+    $("#enemyForm").append(attacksInput);
   };
 }());

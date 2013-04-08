@@ -76,4 +76,6 @@
   exports.Game         = mongoose.model("Game", Game);
   exports.BaseMapPiece = mongoose.model("BaseMapPiece", BaseMapPiece);
   exports.MapPiece     = mongoose.model("MapPiece", MapPiece);
+  exports.EnemyAttack  = mongoose.model("EnemyAttack", EnemyAttack);
+  exports.BaseEnemy    = mongoose.model("BaseEnemy", BaseEnemy);
 }());
