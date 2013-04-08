@@ -55,6 +55,23 @@
     map: [MapPiece]
   });
 
+  var EnemyAttack = new Schema({
+    name: String,
+    hitChance: Number,
+    minDamage: Number,
+    maxDamage: Number
+  });
+
+  var BaseEnemy = new Schema({
+    name: String,
+    type: String,
+    level: Number,
+    armor: Number,
+    health: Number,
+    image: String,
+    attacks: [EnemyAttack]
+  });
+
   exports.User         = mongoose.model("User", User);
   exports.Game         = mongoose.model("Game", Game);
   exports.BaseMapPiece = mongoose.model("BaseMapPiece", BaseMapPiece);
