@@ -1,7 +1,8 @@
 (function(){
   "use strict";
 
-  var _ = require("underscore"),
+  var _  = require("underscore"),
+      fs = require("fs"),
       handleGet,
       handlePost,
       handler, dispatch,
@@ -25,9 +26,10 @@
       level: req.body.level,
       armor: req.body.armor,
       health: req.body.health,
-      image: req.body.image
+      image: fs.readFileSync(__dirname + "/../public/upload/" + req.files.image.path.replace(/^.*[\\\/]/, ''))
     };
     control.addEnemy(enemyData, JSON.parse(req.body.attacks), function(err, enemy){
+      console.log("enemy saved", err, enemy);
       if (err){
         console.log("db error", err);
         return next(500);
