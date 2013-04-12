@@ -14,8 +14,8 @@ results
 npm-debug.log
 
 node_modules/
-.swp
-.env
+*.swp
+*.env
 *.DS_Store
 
 config.json

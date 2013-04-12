@@ -18,7 +18,6 @@
   };
 
   handlePost = function(req, res, next){
-    console.log('got file', req.files.mapFile);
     var control = new ControllerClass(req._schemas, req._conf);
     var pieceInfo = {
       image: fs.readFileSync(__dirname + '/../public/upload/' + req.files.mapFile.path.replace(/^.*[\\\/]/, '')),
