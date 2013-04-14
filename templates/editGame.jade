@@ -4,8 +4,8 @@ block scripts
   script(type="text/javascript")
     dragons.basePieces = !{JSON.stringify(basePieces)};
     dragons.map        = !{JSON.stringify(game.map)};
-  script(type="text/javascript", src="/javascripts/edit_map.js")
   script(type="text/javascript", src="/javascripts/canvas.js")
+  script(type="text/javascript", src="/javascripts/edit_map.js")
 
 block styles
   link(rel="stylesheet", href="/stylesheets/edit_map.css")
@@ -13,26 +13,35 @@ block styles
 block content
   h2.pageTitle #{game.name}
 
-  h3 Edit Map
+  .row-fluid
+    .span2
+      h3 Edit Game
+      .nav.nav-tabs.nav-stacked
+        li.active
+          a(href="#") Edit Map
+        li
+          a(href="/game/#{game._id}/edit/enemies") Edit Enemies
+    .span10
 
-  .mapPieces
-    .row-fluid
-      .span5.basePieces
-        for piece in basePieces
-          img.basePiece(height="50px", width="50px", src="#{piece.image}", data-id="#{piece._id}")
-      .span3
-        h4 Pieces
-        p You can click and drag these onto the map
-  
-    #canvasContainer
-      canvas#map(width="#{mapSize.width}px", height="#{mapSize.height}px")
+      h3 Edit Map
 
-    .tools
-      h4 Piece Tools
-      button.btn.btn-primary#rotatePiece
-        i.icon-repeat.icon-white
-        |  Rotate
-      &nbsp;
-      button.btn.btn-danger#deletePiece
-        i.icon-trash.icon-white
-        |  Delete
+      .mapPieces
+        .row-fluid
+          .span5.basePieces
+            for piece in basePieces
+              img.basePiece(height="50px", width="50px", src="#{piece.image}", data-id="#{piece._id}")
+          .span3
+            h4 Pieces
+            p You can click and drag these onto the map
+      
+        #canvasContainer
+          canvas#map(width="#{mapSize.width}px", height="#{mapSize.height}px")
+
+        .tools
+          h4 Piece Tools
+          button.btn.btn-primary#rotatePiece
+            i.icon-repeat.icon-white
+            |  Rotate
+          button.btn.btn-danger#deletePiece
+            i.icon-trash.icon-white
+            |  Delete

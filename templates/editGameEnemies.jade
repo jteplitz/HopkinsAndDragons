@@ -1,0 +1,39 @@
+extends layout
+
+block scripts
+  script(type="text/javascript")
+    dragons.baseEnemies = !{JSON.stringify(baseEnemies)};
+    dragons.map         = !{JSON.stringify(game.map)};
+
+  script(type="text/javascript", src="/javascripts/canvas.js")
+  script(type="text/javascript", src="/javascripts/edit_enemies.js")
+
+block styles
+  link(rel="stylesheet", href="/stylesheets/edit_enemies.css")
+
+block content
+  h2.pageTitle #{game.name}
+
+  .row-fluid
+    .span2
+      h3 Edit Game
+      .nav.nav-tabs.nav-stacked
+        li
+          a(href="/game/#{game._id}/edit/map") Edit Map
+        li.active
+          a(href="#") Edit Enemies
+
+    .span10
+      h3 Edit Enemies
+
+      .enemies
+        .row-fluid
+          .span5.baseEnemies
+            for enemy in baseEnemies
+              img.baseEnemy(height="25px", width="25px", src="#{enemy.image}", data-id="#{enemy._id}")
+          .span3
+            h4 Enemies
+            p Click and drag an enemy onto the map to place it
+
+        #canvasContainer
+          canvas#map(width="#{mapSize.width}px", height="#{mapSize.height}px")
