@@ -9,7 +9,10 @@
 .tools {
   float: left;
   margin-left: 20px;
-  width: 200px;
+  width: 100px;
+}
+.tools .btn {
+  margin-top: 10px;
 }
 #canvasContainer {
   width: 800px;
