@@ -1,5 +1,4 @@
-/*globals dragons _*/
-(function(){
+/*globals dragons _*/ (function(){
   "use strict";
 
   dragons.canvas = function(canvas){
@@ -21,7 +20,11 @@
       if (_.isArray(element)){
         this.elements = this.elements.concat(element);
       } else {
-        this.elements.push(element);
+        if (element instanceof dragons.RoomElement){
+          this.elements.unshift(element);
+        } else {
+          this.elements.push(element);
+        }
       }
     };
   };
@@ -73,6 +76,13 @@
       };
     }
   };
-  
 
+  dragons.RoomElement = function(image, width, height, x, y, rotate, doorLeft, doorRight, doorTop, doorBottom, id){
+    dragons.gameElements.image.call(this, image, width, height, x, y, rotate, id);
+
+    this.doorLeft   = doorLeft;
+    this.doorRight  = doorRight;
+    this.doorTop    = doorTop;
+    this.doorBottom = doorBottom;
+  };
 }());
