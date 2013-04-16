@@ -43,7 +43,8 @@
       if (err){ return next(500) }
 
       res.json({
-        enemy: enemy
+        enemy: enemy,
+        error: 0
       });
     };
   };

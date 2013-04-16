@@ -6,8 +6,9 @@
   var canvas, mapPieces = [], enemies = [], dragging = false, selectedEnemy,
 
   // functions
-  main, restoreMap, addPiece, addEnemy, PullRadius, Enemy,
-  startDragging, dragPiece, stopDragging, removeDraggingPullRadius, changeRadius;
+  main, sync, restoreMap, addPiece, addEnemy, PullRadius, Enemy,
+  startDragging, dragPiece, stopDragging, removeDraggingPullRadius, changeRadius,
+  syncError, syncSuccess;
 
   dragons.organizedMap = {};
 
@@ -22,10 +23,33 @@
     canvas = new dragons.canvas($("#map")[0]);
     restoreMap();
     setInterval(main, 20); // main canvas loop
+    setInterval(sync, 2000);
   });
 
   main = function(){
     canvas.update();
+  };
+
+  // goes through the enemies and syncs them if need be
+  sync = function(){
+    for (var i = 0; i < dragons.enemies.length; i++){
+      if (dragons.enemies[i].outOfSync && _.has(canvas.elements[i], "_id")){
+        var data = {
+          _id: dragons.enemies[i]._id,
+          x: dragons.enemies[i].x,
+          y: dragons.enemies[i].y,
+          pullRadius: dragons.enemies[i].pullRadius
+        };
+        $.ajax({
+          type: "PUT",
+          url: window.location.pathname,
+          data: data,
+          failure: syncError(dragons.enemies[i]),
+          success: syncSuccess(dragons.enemies[i])
+        });
+        dragons.enemies[i].outOfSync = false;
+      }
+    }
   };
 
   startDragging = function(e){
@@ -96,14 +120,22 @@
         canvas.addElement(enemy);
         removeDraggingPullRadius();
         selectedEnemy = enemy;
+
+        var gameData = {
+          baseEnemy: $(".dragging").attr("data-id"),
+          x: x,
+          y: y,
+          pullRadius: 20
+        };
+        dragons.enemies.push(gameData);
+        selectedEnemy.gameData = dragons.enemies[dragons.enemies.length - 1];
         $.ajax({
           type: "PUT",
+          dataType: "json",
           url: window.location.pathname,
-          data: {
-            baseEnemy: $(".dragging").attr("data-id"),
-            x: x,
-            y: y,
-            pullRadius: 20
+          data: gameData,
+          success: function(data){
+            selectedEnemy.gameData._id = data.enemy._id;
           }
         });
         $(".dragging").remove();
@@ -127,6 +159,10 @@
     var radius = $(this).val();
 
     selectedEnemy.setRadius(radius);
+
+    // update the game data
+    selectedEnemy.gameData.pullRadius = radius;
+    selectedEnemy.gameData.outOfSync = true;
   };
 
   removeDraggingPullRadius = function(){
@@ -209,6 +245,23 @@
 
     this.setRadius = function(radius){
       this.pullRadius = new PullRadius(radius, x + (width / 2), y + (height / 2), "#32B7F0");
+    };
+  };
+  syncError = function(element){
+    return function(err){
+      console.log("error", err);
+      alert("Unable to sync map. Uh-oh");
+      element.outOfSync = true;
+    };
+  };
+
+  syncSuccess = function(element){
+    return function(data){
+      if (data.error !== 0){
+        console.log("error syncing data", data);
+        element.outOfSync = true;
+        return alert("Problem saving data. We're on it!");
+      }
     };
   };
 }());
