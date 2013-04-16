@@ -35,7 +35,7 @@
   // goes through the game elements and syncs them if need be
   sync = function(){
     for (var i = 0; i < canvas.elements.length; i++){
-      if (canvas.elements[i].outOfSync && _.has(canvas.elements[i], "_id")){
+      if (canvas.elements[i] instanceof dragons.RoomElement && canvas.elements[i].outOfSync && _.has(canvas.elements[i], "_id")){
         var data = {
           type: "room",
           id: canvas.elements[i]._id,
@@ -358,6 +358,7 @@
     return function(err){
       console.log("error", err);
       alert("Unable to sync map. Uh-oh");
+      element.outOfSync = true;
     };
   };
 
@@ -365,6 +366,7 @@
     return function(data){
       if (data.error !== 0){
         console.log("error syncing data", data);
+        element.outOfSync = true;
         return alert("Problem saving data. We're on it!");
       }
     };
