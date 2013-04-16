@@ -48,13 +48,6 @@
     rotate: Number
   });
 
-  var Game = new Schema({
-    name: String,
-    players: [Number],
-    owner: Number,
-    map: [MapPiece]
-  });
-
   var EnemyAttack = new Schema({
     name: String,
     hitChance: Number,
@@ -72,10 +65,26 @@
     attacks: [EnemyAttack]
   });
 
+  var Enemy = new Schema({
+    baseEnemy: ObjectId,
+    x: Number,
+    y: Number,
+    pullRadius: Number
+  });
+
+  var Game = new Schema({
+    name: String,
+    players: [Number],
+    owner: Number,
+    map: [MapPiece],
+    enemies: [Enemy]
+  });
+
   exports.User         = mongoose.model("User", User);
   exports.Game         = mongoose.model("Game", Game);
   exports.BaseMapPiece = mongoose.model("BaseMapPiece", BaseMapPiece);
   exports.MapPiece     = mongoose.model("MapPiece", MapPiece);
   exports.EnemyAttack  = mongoose.model("EnemyAttack", EnemyAttack);
   exports.BaseEnemy    = mongoose.model("BaseEnemy", BaseEnemy);
+  exports.Enemy        = mongoose.model("Enemy", Enemy);
 }());

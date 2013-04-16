@@ -9,10 +9,7 @@
       selectPiece, deselectPiece, rotatePiece, deletePiece, createOpenBlock,
       checkPiece,
       sync, syncError, syncSuccess,
-      handleMapClick,
-
-      // classes
-      RoomElement;
+      handleMapClick;
 
   dragons.organizedMap = {};
 
@@ -272,7 +269,7 @@
   // adds a loaded piece to the canvas
   addPiece = function(image, mapPiece, id){
     return function(){
-      var piece = new RoomElement(image, dragons.globals.map.roomWidth, dragons.globals.map.roomHeight,
+      var piece = new dragons.RoomElement(image, dragons.globals.map.roomWidth, dragons.globals.map.roomHeight,
                                                  mapPiece.x, mapPiece.y, mapPiece.rotate, mapPiece.doorLeft, mapPiece.doorRight,
                                                  mapPiece.doorTop, mapPiece.doorBottom, id);
       canvas.addElement(piece);
@@ -347,7 +344,7 @@
     // figure out which element they clicked on
     for (var i = 0; i < canvas.elements.length; i++){
       // check that it is a map piece and if so test for click
-      if (canvas.elements[i] instanceof RoomElement && dragons.utils.detectMouseOver(canvas.elements[i], e, $("#map").offset())){
+      if (canvas.elements[i] instanceof dragons.RoomElement && dragons.utils.detectMouseOver(canvas.elements[i], e, $("#map").offset())){
         selectPiece(canvas.elements[i]);
         return;
       }
@@ -371,14 +368,5 @@
         return alert("Problem saving data. We're on it!");
       }
     };
-  };
-
-  RoomElement = function(image, width, height, x, y, rotate, doorLeft, doorRight, doorTop, doorBottom, id){
-    dragons.gameElements.image.call(this, image, width, height, x, y, rotate, id);
-
-    this.doorLeft   = doorLeft;
-    this.doorRight  = doorRight;
-    this.doorTop    = doorTop;
-    this.doorBottom = doorBottom;
   };
 }());

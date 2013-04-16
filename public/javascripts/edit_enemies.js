@@ -3,10 +3,10 @@
   "use strict";
 
   // globals
-  var canvas, mapPieces = [], dragging = false, selectedEnemy,
+  var canvas, mapPieces = [], enemies = [], dragging = false, selectedEnemy,
 
   // functions
-  main, restoreMap, addPiece, RoomElement, PullRadius, Enemy,
+  main, restoreMap, addPiece, addEnemy, PullRadius, Enemy,
   startDragging, dragPiece, stopDragging, removeDraggingPullRadius, changeRadius;
 
   dragons.organizedMap = {};
@@ -75,7 +75,7 @@
 
         var pullRadius = new PullRadius(20, x, y, "#32B7F0");
         pullRadius.dragging = true;
-        canvas.elements.push(pullRadius);
+        canvas.addElement(pullRadius);
       } else {
         // remove the old dragging pull radius if it was there
         removeDraggingPullRadius();
@@ -90,12 +90,23 @@
       var enemyImage = new Image();
 
       enemyImage.onload = function(){
+        var x = e.pageX - $("#map").offset().left, y = e.pageY - $("#map").offset().top;
         var enemy = new Enemy(enemyImage, $(".dragging").width(), $(".dragging").height(),
-                              e.pageX - $("#map").offset().left, e.pageY - $("#map").offset().top, 20, $(".dragging").attr("data-id"));
-        canvas.elements.push(enemy);
-        $(".dragging").remove();
+                              x, y, 20, $(".dragging").attr("data-id"));
+        canvas.addElement(enemy);
         removeDraggingPullRadius();
         selectedEnemy = enemy;
+        $.ajax({
+          type: "PUT",
+          url: window.location.pathname,
+          data: {
+            baseEnemy: $(".dragging").attr("data-id"),
+            x: x,
+            y: y,
+            pullRadius: 20
+          }
+        });
+        $(".dragging").remove();
       };
 
       enemyImage.src = $(".dragging").attr("src");
@@ -130,16 +141,23 @@
 
   // maybe place the following three functions in some other file? canvas.js? map.js...
   restoreMap = function(){
-    for (var i = 0; i < dragons.map.length; i++){
+    var i;
+    for (i = 0; i < dragons.map.length; i++){
       var pieceImage = new Image();
       pieceImage.onload = addPiece(pieceImage, dragons.map[i], dragons.map[i]._id);
       pieceImage.src = dragons.map[i].image;
+    }
+
+    for (i = 0; i < dragons.enemies.length; i++){
+      var enemyImage    = new Image();
+      enemyImage.onload = addEnemy(enemyImage, dragons.enemies[i], dragons.enemies[i]._id);
+      enemyImage.src    = dragons.enemies[i].baseEnemy.image;
     }
   };
   // adds a loaded piece to the canvas
   addPiece = function(image, mapPiece, id){
     return function(){
-      var piece = new RoomElement(image, dragons.globals.map.roomWidth, dragons.globals.map.roomHeight,
+      var piece = new dragons.RoomElement(image, dragons.globals.map.roomWidth, dragons.globals.map.roomHeight,
                                                  mapPiece.x, mapPiece.y, mapPiece.rotate, mapPiece.doorLeft, mapPiece.doorRight,
                                                  mapPiece.doorTop, mapPiece.doorBottom, id);
       canvas.addElement(piece);
@@ -148,14 +166,16 @@
       return piece;
     };
   };
-  RoomElement = function(image, width, height, x, y, rotate, doorLeft, doorRight, doorTop, doorBottom, id){
-    dragons.gameElements.image.call(this, image, width, height, x, y, rotate, id);
 
-    this.doorLeft   = doorLeft;
-    this.doorRight  = doorRight;
-    this.doorTop    = doorTop;
-    this.doorBottom = doorBottom;
+  // adds an enemy to the canvas
+  addEnemy = function(image, enemyData, id){
+    return function(){
+      var enemy = new Enemy(image, 25, 25, enemyData.x, enemyData.y, enemyData.pullRadius, enemyData._id);
+      canvas.addElement(enemy);
+      return enemy;
+    };
   };
+
 
   PullRadius = function(radius, x, y, color){
     dragons.gameElements.element.call(this, radius, radius, x, y, null);
