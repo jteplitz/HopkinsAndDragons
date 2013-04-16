@@ -34,6 +34,32 @@ block content
           .span3
             h4 Enemies
             p Click and drag an enemy onto the map to place it
+        .row-fluid
+          .span9
+            #canvasContainer
+              canvas#map(width="#{mapSize.width}px", height="#{mapSize.height}px")
+          .span3
+            h3.enemyName
+            .enemyProperties.hidden
+              form
+                .row-fluid
+                  .span6
+                    label(for="level") Level:
+                    input.input-small.level(type="text", name="level", disabled)
+                  .span6
+                    label(for="type") Type:
+                    input.input-small.type(type="text", name="type", disabled)
 
-        #canvasContainer
-          canvas#map(width="#{mapSize.width}px", height="#{mapSize.height}px")
+                .row-fluid
+                  .span6
+                    label(for="health") Health:
+                    input.input-small.health(type="text", name="health", disabled)
+                  .span6
+                    label(for="armor") Armor:
+                    input.input-small.armor(type="text", name="armor", disabled)
+                .row-fluid
+                  .span6
+                    label(for="pullRadius") Pull Radius:
+                    input.input.pullRadius(type="number", name="pullRadius")
+
+
