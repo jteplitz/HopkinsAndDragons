@@ -1,4 +1,5 @@
-/*globals dragons _*/ (function(){
+/*globals dragons _*/
+(function(){
   "use strict";
 
   // globals
