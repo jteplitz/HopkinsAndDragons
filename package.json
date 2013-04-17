@@ -19,5 +19,6 @@
     "mongoose": "3.5.x",
     "aws-sdk": "0.9.x",
     "connect-mongo": "0.3.x"
-  }
+  },
+  "subdomain": "dragons"
 }

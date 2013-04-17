@@ -8,7 +8,7 @@
   // functions
   main, sync, restoreMap, addPiece, addEnemy, PullRadius, Enemy,
   startDragging, dragPiece, stopDragging, removeDraggingPullRadius, changeRadius,
-  syncError, syncSuccess;
+  handleMapClick, syncError, syncSuccess, selectEnemy, deselectEnemy;
 
   dragons.organizedMap = {};
 
@@ -17,6 +17,8 @@
     $(document).on("mousemove", dragPiece);
     $(document).on("mouseup", ".dragging", stopDragging);
     $(".baseEnemy").on("dragstart", function(e){ e.preventDefault() }); // prevent browser dragging from getting in the way
+
+    $("#map").on("click", handleMapClick);
 
     $(".enemyProperties .pullRadius").on("change", changeRadius);
 
@@ -116,19 +118,29 @@
       enemyImage.onload = function(){
         var x = e.pageX - $("#map").offset().left, y = e.pageY - $("#map").offset().top;
         var enemy = new Enemy(enemyImage, $(".dragging").width(), $(".dragging").height(),
-                              x, y, 20, $(".dragging").attr("data-id"));
+                              x, y, 20, $(".dragging").attr("data-id")),
+            baseEnemyId = $(".dragging").attr("data-id"), baseEnemy;
+
+        // find the base enemy
+        for (var i = 0; i < dragons.baseEnemies.length; i++){
+          if (dragons.baseEnemies[i]._id === baseEnemyId){
+            baseEnemy = dragons.baseEnemies[i];
+          }
+        }
         canvas.addElement(enemy);
         removeDraggingPullRadius();
-        selectedEnemy = enemy;
 
         var gameData = {
-          baseEnemy: $(".dragging").attr("data-id"),
+          baseEnemy: baseEnemy,
           x: x,
           y: y,
           pullRadius: 20
         };
         dragons.enemies.push(gameData);
-        selectedEnemy.gameData = dragons.enemies[dragons.enemies.length - 1];
+        enemy.gameData = dragons.enemies[dragons.enemies.length - 1];
+        selectEnemy(enemy);
+
+        gameData.baseEnemy = baseEnemyId;
         $.ajax({
           type: "PUT",
           dataType: "json",
@@ -153,6 +165,52 @@
         }
       });
     }
+  };
+
+  handleMapClick = function(e){
+    // figure out which enemy they clicked
+    for (var i = 0; i < canvas.elements.length; i++){
+      if (canvas.elements[i] instanceof Enemy && dragons.utils.detectMouseOver(canvas.elements[i], e, $("#map").offset())){
+        selectEnemy(canvas.elements[i]);
+        return;
+      }
+    }
+    deselectEnemy(); // they clicked on nothing so deselect the selected enemy
+  };
+
+  selectEnemy = function(enemy){
+    deselectEnemy();
+    // draw a color block over the enemy
+    var colorBlock = new dragons.gameElements.colorBlock("#28FA2B", enemy.width, enemy.height, enemy.x, enemy.y);
+    colorBlock.enemySelected = true;
+    canvas.elements.push(colorBlock);
+
+    selectedEnemy = enemy; // set the selectedEnemy
+
+    var baseEnemy = enemy.gameData.baseEnemy;
+
+    // display the info in the sidebar
+    $("h3.enemyName").text(baseEnemy.name);
+    $(".enemyProperties .level").val(baseEnemy.level);
+    $(".enemyProperties .type").val(baseEnemy.type);
+    $(".enemyProperties .health").val(baseEnemy.health);
+    $(".enemyProperties .armor").val(baseEnemy.armor);
+    $(".enemyProperties .pullRadius").val(enemy.gameData.pullRadius);
+
+    $(".enemyProperties").removeClass("hidden");
+  };
+
+  // deselectes the selcted enemy
+  deselectEnemy = function(){
+    // remove the last color block
+    for (var i = 0; i < canvas.elements.length; i++){
+      if (canvas.elements[i] instanceof dragons.gameElements.colorBlock && canvas.elements[i].enemySelected){
+        canvas.elements.splice(i, 1);
+        selectedEnemy = null;
+        break;
+      }
+    }
+    $(".enemyProperties").addClass("hidden");
   };
 
   changeRadius = function(){
@@ -207,6 +265,7 @@
   addEnemy = function(image, enemyData, id){
     return function(){
       var enemy = new Enemy(image, 25, 25, enemyData.x, enemyData.y, enemyData.pullRadius, enemyData._id);
+      enemy.gameData = enemyData;
       canvas.addElement(enemy);
       return enemy;
     };
