@@ -15,7 +15,9 @@
   dragons.organizedMap = {};
 
 
+
   $(document).ready(function(){
+    dragons.utils.cleanGloabls();
     //$(".basePiece").on("drag", startDragging);
     $(document).on("mousemove", dragPiece);
     $(".basePiece").on("mousedown", startDragging);
