@@ -32,6 +32,12 @@
 
         dragons.organizedMap[mapPiece.x][mapPiece.y] = mapPiece;
       }
+    },
+
+    // ensures that globals are of the proper type
+    cleanGlobals: function(){
+      dragons.globals.map.roomWidth = parseInt(dragons.globals.map.roomWidth, 10);
+      dragons.globals.map.roomHeight = parseInt(dragons.globals.map.roomHeight, 10);
     }
   };
 }());
