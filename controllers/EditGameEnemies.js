@@ -85,6 +85,15 @@
     });
   };
 
+  _ptype.deleteEnemy = function(enemyId, cb){
+    getGame(this, false)(function(err, game){
+      if (err){ return cb (err) }
+      
+      game.enemies.id(enemyId).remove();
+      game.save(cb);
+    });
+  };
+
   getBaseEnemies = function(self){
     return function(cb){
       self.schemas.BaseEnemy.find({}, cb);

@@ -50,7 +50,26 @@
   };
 
   handleDelete = function(req, res, next){
-    
+    var control = new ControllerClass(req.session.user, req.params.id, req._schemas);
+    if (!_.has(req.body, "_id")){
+      return res.json(400, {
+        err: 400,
+        msg: "_id required to delete an enemy"
+      });
+    }
+
+    control.deleteEnemy(req.body._id, function(err){
+      if (err){
+        return res.json(500, {
+          err: 500,
+          msg: "Unable to process request at this time"
+        });
+      }
+
+      return res.json({
+        err: 0
+      });
+    });
   };
   
   dispatch = {GET: handleGet, POST: handlePost, PUT: handlePut, DELETE: handleDelete};
