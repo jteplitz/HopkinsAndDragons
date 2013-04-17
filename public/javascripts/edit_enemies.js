@@ -8,7 +8,7 @@
   // functions
   main, sync, restoreMap, addPiece, addEnemy, PullRadius, Enemy,
   startDragging, dragPiece, stopDragging, removeDraggingPullRadius, changeRadius,
-  handleMapClick, syncError, syncSuccess, selectEnemy, deselectEnemy;
+  handleMapClick, syncError, syncSuccess, selectEnemy, deselectEnemy, deleteEnemy, removeEnemy;
 
   dragons.organizedMap = {};
 
@@ -19,6 +19,8 @@
     $(".baseEnemy").on("dragstart", function(e){ e.preventDefault() }); // prevent browser dragging from getting in the way
 
     $("#map").on("click", handleMapClick);
+
+    $("#deleteEnemy").on("click", deleteEnemy);
 
     $(".enemyProperties .pullRadius").on("change", changeRadius);
 
@@ -36,6 +38,10 @@
   sync = function(){
     for (var i = 0; i < dragons.enemies.length; i++){
       if (dragons.enemies[i].outOfSync && _.has(canvas.elements[i], "_id")){
+        if (dragons.enemies[i]["delete"]){
+          return deleteEnemy(null, dragons.enemies[i]._id);
+        }
+
         var data = {
           _id: dragons.enemies[i]._id,
           x: dragons.enemies[i].x,
@@ -211,6 +217,68 @@
       }
     }
     $(".enemyProperties").addClass("hidden");
+  };
+
+  // deletes the enemy with the given id or the selected enemy
+  deleteEnemy = function(e, id){
+    var deletingSelected = _.isUndefined(id);
+
+    if (deletingSelected && !_.has(selectedEnemy.gameData, "_id")){
+      selectedEnemy.gameData.outOfSync    = true;
+      selectedEnemy.gameData["delete"]    = true;
+
+      // although we can't remove them yet, take them off the canvas so it doesn't look laggy
+      for (var i = 0; i < canvas.elements.length; i++){
+        if (canvas.elements[i] === selectedEnemy){
+          canvas.elements.splice(i, 1);
+          break;
+        }
+      }
+      return;
+    }
+    
+    id = (deletingSelected) ? selectedEnemy.gameData._id : id;
+
+    $.ajax({
+      url: window.location.pathname,
+      type: "DELETE",
+      data: {_id: id},
+      dataType: "json",
+      success: function(data){
+        if (data.err !== 0){
+          console.log("enemy deletion error", data.err);
+          alert("Unable to delete enemy");
+        }
+      },
+      failure: function(err){
+        console.log("enemy deletion failure", err);
+        alert("Unable to delete enemy");
+      }
+    });
+
+    removeEnemy(id);
+    if (deletingSelected){
+      deselectEnemy();
+    }
+  };
+  
+  // removes an enemy from the map and the enemies array
+  removeEnemy = function(id){
+    // remove them from the canvas
+    for (var i = 0; i < canvas.elements.length; i++){
+      if (canvas.elements[i] instanceof Enemy && canvas.elements[i].gameData._id === id){
+        canvas.elements.splice(i, 1);
+        break;
+      }
+    }
+
+    // remove them from the data array
+    for (i = 0; i < dragons.enemies; i++){
+      if (dragons.enemies[i]._id === id){
+        dragons.enemies.splice(i, 1);
+        break;
+      }
+    }
   };
 
   changeRadius = function(){
