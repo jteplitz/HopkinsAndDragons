@@ -9,23 +9,15 @@
       GameCtrl, _ptype,
       getGame, addBaseInfo;
 
-  GameCtrl = function(schemas, socket, user, gameId){
+  GameCtrl = function(schemas, user, gameId){
     this.schemas  = schemas;
-    this.socket   = socket;
     this.gameId   = gameId;
     this.user     = user;
-    this.room     = "/game/" + gameId;
-
 
     this.payload = {title: ""};
     this._view   = new ViewClass();
     
     var self = this;
-    
-    // TODO move socket stuff to new file
-    if (!_.isNull(socket)){
-      this.socket.join(this.room);
-    }
   };
 
   _ptype = GameCtrl.prototype = base.getProto("std");

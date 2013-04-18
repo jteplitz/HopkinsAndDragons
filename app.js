@@ -15,14 +15,17 @@
       conf      = require('nconf').argv().env().file({file: __dirname + '/config.json'}),
       _ = require("underscore"),
       io        = require("socket.io"),
-      GameController = require("./controllers/Game.js"),
+      sio       = require("socket.io-sessions"),
+      GameServer = require("./app/gameServer.js"),
       path = require('path');
 
-  var app = express(), server;
+  var app = express(), server,
+      sessionStore, sockets, gameServer;
 
   mongoose.connect(conf.get("mongo"));
 
   mongoose.connection.on("open", function(){
+    sessionStore = new MongoStore({db: mongoose.connection.db});
     app.configure(function(){
       app.set('port', process.env.PORT || 3000);
       app.set('views', __dirname + '/templates');
@@ -33,9 +36,9 @@
         uploadDir: __dirname + "/public/upload/"
       }));
       app.use(express.methodOverride());
-      app.use(express.cookieParser('your secret here'));
+      app.use(express.cookieParser(conf.get("secret")));
       app.use(express.session({
-        store: new MongoStore({db: mongoose.connection.db})
+        store: sessionStore
       }));
       app.use(app.router);
       app.use(require('less-middleware')({ src: __dirname + '/public' }));
@@ -86,12 +89,19 @@
     server = http.createServer(app).listen(app.get('port'), function(){
       console.log("Express server listening on port " + app.get('port'));
     });
-    io = io.listen(server);
-    // send a socket.io request to the game controller
-    io.sockets.on("connection", function(socket){
-      var controller = new GameController(schemas, socket, null, null); // TODO hook up session info for user and game id
-      socket.on("position", function(data){
-        io.sockets["in"]("/game/null").emit("position", data);
+
+    // setup the Game Server
+    gameServer = new GameServer(conf, schemas);
+
+    sockets = sio.enable({
+      socket: io.listen(server),
+      store: sessionStore,
+      parser: express.cookieParser(conf.get("secret"))
+    });
+
+    sockets.on("sconnection", function(client, session){
+      client.on("join", function(data){
+        gameServer.joinGame(client, session.user, data);
       });
     });
  });
