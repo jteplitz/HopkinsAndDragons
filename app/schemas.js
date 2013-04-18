@@ -72,9 +72,18 @@
     pullRadius: Number
   });
 
+  var Player = new Schema({
+    name: String,
+    image: String,
+    x: Number,
+    y: Number,
+    level: Number,
+    owner: Number
+  });
+
   var Game = new Schema({
     name: String,
-    players: [Number],
+    players: [Player],
     owner: Number,
     map: [MapPiece],
     enemies: [Enemy]
@@ -87,4 +96,5 @@
   exports.EnemyAttack  = mongoose.model("EnemyAttack", EnemyAttack);
   exports.BaseEnemy    = mongoose.model("BaseEnemy", BaseEnemy);
   exports.Enemy        = mongoose.model("Enemy", Enemy);
+  exports.Player       = mongoose.model("Player", Player);
 }());

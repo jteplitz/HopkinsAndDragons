@@ -25,6 +25,13 @@
       socket.emit("join", {gameId: dragons.gameId});
     });
 
+    socket.on("connected", function(data){
+      console.log("connected to game " +  data.gameId + " with " + (data.clientCount - 1) + " others"); });
+
+    socket.on("start", function(data){
+      console.log("The game is starting");
+    });
+
     var guyImage = new Image();
     guyImage.onload = function(){
       guy = new dragons.gameElements.image(guyImage, 50, 50, 20, 20, 0, null);
@@ -72,7 +79,7 @@
 
   main = function(){
     canvas.update();
-    sync();
+    //sync();
   };
 
   // sends positions through the socket
@@ -113,7 +120,7 @@
   // adds an enemy to the canvas
   addEnemy = function(image, enemyData, id){
     return function(){
-      var enemy = new dragons.gameElements.Enemy(image, 50, 50, enemyData.x, enemyData.y, enemyData.pullRadius, enemyData._id);
+      var enemy = new dragons.gameElements.Enemy(image, 50, 50, enemyData.x * 2, enemyData.y * 2, enemyData.pullRadius, enemyData._id);
       enemy.gameData = enemyData;
       canvas.addElement(enemy);
       return enemy;

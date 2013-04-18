@@ -90,14 +90,14 @@
       console.log("Express server listening on port " + app.get('port'));
     });
 
-    // setup the Game Server
-    gameServer = new GameServer(conf, schemas);
+    io = io.listen(server);
+    sockets = new Sio(io, sessionStore, express.cookieParser(conf.get("secret")));
 
-    sockets = new Sio(io.listen(server), sessionStore, express.cookieParser(conf.get("secret")));
+    // setup the Game Server
+    gameServer = new GameServer(conf, schemas, io.sockets);
 
 
     sockets.on("connection", function(err, client, session){
-      console.log("connection", session);
       client.on("join", function(data){
         gameServer.joinGame(client, session.user, data);
       });
