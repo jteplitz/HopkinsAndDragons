@@ -14,9 +14,11 @@
       MongoStore = require("connect-mongo")(express),
       conf      = require('nconf').argv().env().file({file: __dirname + '/config.json'}),
       _ = require("underscore"),
+      io        = require("socket.io"),
+      GameController = require("./controllers/Game.js"),
       path = require('path');
 
-  var app = express();
+  var app = express(), server;
 
   mongoose.connect(conf.get("mongo"));
 
@@ -49,7 +51,7 @@
     });
 
     _.each(routeList.routes, function(route){
-      var methods = route[5] || ["get"];
+      var methods = route[6] || ["get"];
 
       methods.forEach(function(method){
         var params = [];
@@ -67,6 +69,13 @@
           });
         }
 
+        if (route[4]){
+          params.push(function(req, res, next){
+            req._io = io;
+            next();
+          });
+        }
+
         params.push(auth(conf, route[4]));
 
         app[method](route[0], params, route[1]);
@@ -74,8 +83,16 @@
     });
 
 
-    http.createServer(app).listen(app.get('port'), function(){
+    server = http.createServer(app).listen(app.get('port'), function(){
       console.log("Express server listening on port " + app.get('port'));
+    });
+    io = io.listen(server);
+    // send a socket.io request to the game controller
+    io.sockets.on("connection", function(socket){
+      var controller = new GameController(schemas, socket, null, null); // TODO hook up session info for user and game id
+      socket.on("position", function(data){
+        io.sockets["in"]("/game/null").emit("position", data);
+      });
     });
  });
 }());
