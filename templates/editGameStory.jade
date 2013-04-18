@@ -1,0 +1,35 @@
+extends layout
+
+block scripts 
+  script(type="text/javascript")
+    dragons.enemies = !{JSON.stringify(game.enemies)};
+    dragons.map     = !{JSON.stringify(game.map)};  
+  script(type="text/javascript", src="/javascripts/canvas.js")
+  script(type="text/javascript", src="/javascripts/edit_story.js")
+
+block styles
+  link(rel="stylesheet", href="/stylesheets/edit_story.css")
+
+block content
+  h2.pageTitle #{game.name}
+
+  .row-fluid
+    .span2
+      h3 Edit Game
+      .nav.nav-tabs.nav-stacked
+        li
+          a(href="/game/#{game._id}/edit/map") Edit Map
+        li
+          a(href="/game/#{game._id}/edit/enemies") Edit Enemies
+        li.active
+          a(href="#") Edit Story
+    .span10
+
+      h3 Edit Story
+
+      .row-fluid
+        .span10
+          #mapContainer
+            canvas#map(width="#{mapSize.width}px", height="#{mapSize.height}px")
+        .span2
+          p Click anywhere on the map to add a story point

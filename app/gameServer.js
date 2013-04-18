@@ -6,9 +6,10 @@
 
       gameServer, _ptype;
 
-  gameServer = function(conf, schemas){
+  gameServer = function(conf, schemas, sockets){
     this.conf    = conf;
     this.schemas = schemas;
+    this.sockets = sockets;
 
     this.games = {};
     this.gameCount = 0;
@@ -26,13 +27,13 @@
     self.schemas.Game.findOne({_id: gameId}, function(err, game){
       if (err){ return client.emit("error", {err: 500, msg: "Sorry, something went wrong while joining the game."}) }
 
-      if (_.has(self.games, gameId)){
+      if (!_.isUndefined(game) && !_.isNull(game)){
         // the game exists
           // make sure they are either a player or an owner
-          if (game.owner !== self.user._id){
+          if (game.owner !== user._id){
             var valid = false;
             for (var i = 0; i < game.players.length; i++){
-              if (game.players[i] === self.user._id){
+              if (game.players[i] === user._id){
                 valid = true;
               }
             }
@@ -40,12 +41,14 @@
               return client.emit("error", {err: 401, msg: "You are not allowed to join that game"});
             }
           }
+          console.log("joining game");
+          client.user = user;
 
           // this is valid. Join (or create) the game
           if (_.has(self.games, gameId)){
             self.games[gameId].addClient(client);
           } else {
-            game = new Game(gameId, game);
+            game = new Game(gameId, game, self.sockets);
             game.addClient(client);
             self.games[gameId] = game;
           }
