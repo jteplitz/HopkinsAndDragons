@@ -15,7 +15,7 @@
       conf      = require('nconf').argv().env().file({file: __dirname + '/config.json'}),
       _ = require("underscore"),
       io        = require("socket.io"),
-      sio       = require("socket.io-sessions"),
+      Sio       = require("session.socket.io"),
       GameServer = require("./app/gameServer.js"),
       path = require('path');
 
@@ -93,13 +93,11 @@
     // setup the Game Server
     gameServer = new GameServer(conf, schemas);
 
-    sockets = sio.enable({
-      socket: io.listen(server),
-      store: sessionStore,
-      parser: express.cookieParser(conf.get("secret"))
-    });
+    sockets = new Sio(io.listen(server), sessionStore, express.cookieParser(conf.get("secret")));
 
-    sockets.on("sconnection", function(client, session){
+
+    sockets.on("connection", function(err, client, session){
+      console.log("connection", session);
       client.on("join", function(data){
         gameServer.joinGame(client, session.user, data);
       });

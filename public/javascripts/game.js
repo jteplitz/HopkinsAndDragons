@@ -20,27 +20,17 @@
 
     socket = io.connect(window.location.url);
 
+    socket.on("connect", function(){
+      // attempt to join the game
+      socket.emit("join", {gameId: dragons.gameId});
+    });
+
     var guyImage = new Image();
     guyImage.onload = function(){
       guy = new dragons.gameElements.image(guyImage, 50, 50, 20, 20, 0, null);
       canvas.elements.push(guy);
     };
     guyImage.src = "http://bbsimg.ngfiles.com/1/23542000/ngbbs4ee01350764a2.jpg";
-
-    socket.on("position", function(data){
-      if(observer){
-        guy.dx = data.dx;
-        guy.dy = data.dy;
-
-        if (data.dx === 0){
-          guy.x = data.x;
-        }
-
-        if (data.dy === 0){
-          guy.y = data.y;
-        }
-      }
-    });
 
     setInterval(main, 50);
   });
