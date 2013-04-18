@@ -19,7 +19,8 @@
     "mongoose": "3.5.x",
     "aws-sdk": "0.9.x",
     "connect-mongo": "0.3.x",
-    "socket.io": "0.9.x"
+    "socket.io": "0.9.x",
+    "socket.io-sessions": "0.6.x"
   },
   "subdomain": "dragons"
 }
