@@ -74,6 +74,16 @@
 
         ctx.restore();
       };
+    },
+    Enemy: function(image, width, height, x, y, pullRadius, id){
+      dragons.gameElements.element.call(this, width, height, x, y, id);
+
+      this.pullRadius = pullRadius;
+      this.image      = new dragons.gameElements.image(image, width, height, x, y, 0, id);
+
+      this.draw = function(ctx){
+        this.image.draw(ctx);
+      };
     }
   };
 

@@ -1,6 +1,6 @@
 {
   "name": "hopdragons",
-  "version": "0.0.1-1",
+  "version": "0.0.1-6",
   "engines": {
     "node": "0.8.x",
     "npm": "1.1.x"
@@ -18,7 +18,8 @@
     "less-middleware": "0.1.x",
     "mongoose": "3.5.x",
     "aws-sdk": "0.9.x",
-    "connect-mongo": "0.3.x"
+    "connect-mongo": "0.3.x",
+    "socket.io": "0.9.x"
   },
   "subdomain": "dragons"
 }

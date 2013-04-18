@@ -17,7 +17,7 @@
 
 
   $(document).ready(function(){
-    dragons.utils.cleanGloabls();
+    dragons.utils.cleanGlobals();
     //$(".basePiece").on("drag", startDragging);
     $(document).on("mousemove", dragPiece);
     $(".basePiece").on("mousedown", startDragging);
