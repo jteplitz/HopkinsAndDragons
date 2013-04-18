@@ -2,9 +2,11 @@
   "use strict";
 
   var _    = require("underscore"),
-      Game = require("./Game.js");
+      Game = require("./Game.js"),
 
-  var gameServer = function(conf, schemas){
+      gameServer, _ptype;
+
+  gameServer = function(conf, schemas){
     this.conf    = conf;
     this.schemas = schemas;
 
@@ -12,7 +14,9 @@
     this.gameCount = 0;
   };
 
-  gameServer.joinGame = function(client, user, data){
+  _ptype = gameServer.prototype;
+
+  _ptype.joinGame = function(client, user, data){
     var self = this;
 
     var gameId = data.gameId;
@@ -22,7 +26,7 @@
     self.schemas.Game.findOne({_id: gameId}, function(err, game){
       if (err){ return client.emit("error", {err: 500, msg: "Sorry, something went wrong while joining the game."}) }
 
-      if (_.has(this.games, gameId)){
+      if (_.has(self.games, gameId)){
         // the game exists
           // make sure they are either a player or an owner
           if (game.owner !== self.user._id){

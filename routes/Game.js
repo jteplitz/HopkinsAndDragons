@@ -8,7 +8,7 @@
       ControllerClass = require("../controllers/Game.js");
 
   handleGet = function(req, res, next){
-    var control = new ControllerClass(req._schemas, null, req.session.user, req.params.id);
+    var control = new ControllerClass(req._schemas, req.session.user, req.params.id);
 
 
     var params = {};

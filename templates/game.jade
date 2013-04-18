@@ -4,6 +4,7 @@ block scripts
   script(type="text/javascript")
     dragons.enemies = !{JSON.stringify(game.enemies)};
     dragons.map     = !{JSON.stringify(game.map)};  
+    dragons.gameId  = "!{game._id}";
 
   script(type="text/javascript", src="/javascripts/canvas.js")
   script(type="text/javascript", src="/socket.io/socket.io.js")
