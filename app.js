@@ -54,7 +54,7 @@
     });
 
     _.each(routeList.routes, function(route){
-      var methods = route[6] || ["get"];
+      var methods = route[5] || ["get"];
 
       methods.forEach(function(method){
         var params = [];

@@ -81,12 +81,22 @@
     owner: Number
   });
 
+  var StoryPoint = new Schema({
+    text: String,
+    x: Number,
+    y: Number,
+    Enemy: ObjectId
+  });
+
   var Game = new Schema({
     name: String,
     players: [Player],
     owner: Number,
     map: [MapPiece],
-    enemies: [Enemy]
+    enemies: [Enemy],
+    story: [StoryPoint],
+    backgroundStory: String,
+    endStory: String
   });
 
   exports.User         = mongoose.model("User", User);
@@ -97,4 +107,5 @@
   exports.BaseEnemy    = mongoose.model("BaseEnemy", BaseEnemy);
   exports.Enemy        = mongoose.model("Enemy", Enemy);
   exports.Player       = mongoose.model("Player", Player);
+  exports.StoryPoint   = mongoose.model("StoryPoint", StoryPoint);
 }());

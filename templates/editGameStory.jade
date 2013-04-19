@@ -33,3 +33,21 @@ block content
             canvas#map(width="#{mapSize.width}px", height="#{mapSize.height}px")
         .span2
           p Click anywhere on the map to add a story point
+
+  .modal.hide.fade#storyPointModal
+    .modal-header
+      button.close(type="button", data-dismiss="modal", aria-hidden="true") &times; 
+      h3 Add Story Point
+
+    .modal-body
+      p Enter story text below:
+      textarea#storyText(rows="13", tabindex="0")
+
+    .modal-footer
+      a#saveButton.btn.btn-primary
+        i.icon-ok.icon-white
+        | Save
+      a#cancelButton.btn.btn-secondary
+        i.icon-remove.icon-black
+        | Cancel
+      

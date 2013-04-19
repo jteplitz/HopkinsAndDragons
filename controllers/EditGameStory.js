@@ -76,6 +76,39 @@
     };
   };
 
+  _ptype.addPoint = function(pointInfo, cb){
+    var self = this;
+    getGame(self, false)(function(err, game){
+      if (err) { return cb(err) }
+
+      var storyPoint = new self.schemas.StoryPoint({
+        x: pointInfo.x,
+        y: pointInfo.y,
+        enemy: pointInfo.enemy,
+        text: pointInfo.text
+      });
+      game.story.push(storyPoint);
+      game.save(function(err, game){
+        cb(err, storyPoint);
+      });
+    });
+  };
+
+  _ptype.editPoint = function(id, pointInfo, cb){
+    var self = this;
+    getGame(self, false)(function(err, game){
+      var point = game.story.id(id);
+      for (var property in pointInfo){
+        if(pointInfo.hasOwnProperty(property)){
+          point[property] = pointInfo[property];
+        }
+      }
+      game.save(function(err, game){
+        cb(err, point);
+      });
+    });
+  };
+
   addBaseInfo = function(self, enemy){
     enemy = enemy.toObject(); // we just want the properties, not the fancy mongoose stuff
     return function(cb){
