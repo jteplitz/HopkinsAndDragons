@@ -7,10 +7,11 @@
       async     = require("async"),
 
       EditGamePlayersCtrl, _ptype,
-      getGame, addBaseInfo, getUser;
+      getGame, addBaseInfo, getUser, getUserByEmail;
 
-  EditGamePlayersCtrl = function(schemas, user, gameId){
+  EditGamePlayersCtrl = function(schemas, conf, user, gameId){
     this.schemas = schemas;
+    this.conf    = conf;
     this.user    = user;
     this.gameId  = gameId;
 
@@ -36,8 +37,14 @@
       };
       var asyncPlayers = {};
       for (var i = 0; i < game.players.length; i++){
+        game.players[i] = game.players[i].toObject();
         if (_.has(players, game.players[i].name)){
           //players[game.players[i].name] = game.players[i].owner;
+          if (!_.has(game.players[i], "owner") || game.players[i].owner === null){
+            continue;
+          }
+          console.log("adding", game.players[i]);
+
           asyncPlayers[game.players[i].name] = getUser(self.schemas, game.players[i].owner);
         }
       }
@@ -58,11 +65,51 @@
   };
 
   _ptype.changePlayers = function(players, cb){
+    var self = this;
+    // get the players and the game
+    var asyncPlayers = {game: getGame(self, false)};
+    for (var player in players){
+      if (players.hasOwnProperty(player) && players[player] !== null){
+        asyncPlayers[player] = getUserByEmail(self.schemas, players[player]);
+      }
+    }
+    async.parallel(asyncPlayers, function(err, data){
+      if (err){ return cb(err) }
+      var game = data.game;
+      
+      // modify the players that already exist
+      for (var i = 0; i < game.players.length; i++){
+        if (_.has(data, game.players[i].name)){
+          game.players[i].owner = data[game.players[i].name]._id;
+          delete data[game.players[i].name];
+        }
+      }
+      // add the other players
+      for (var player in data){
+        if (data.hasOwnProperty(player) && player !== "game"){
+          game.players.push(new self.schemas.Player({
+            x: 20,
+            y: 20,
+            name: player,
+            image: self.conf.get("players:" + player + ":image"),
+            owner: data[player]._id,
+            level: 1
+          }));
+        }
+      }
+      game.save(cb);
+    });
   };
 
   getUser = function(schemas, id){
     return function(cb){
       schemas.User.findOne({_id: id}, cb);
+    };
+  };
+
+  getUserByEmail = function(schemas, email){
+    return function(cb){
+      schemas.User.findOne({email: email}, cb);
     };
   };
 

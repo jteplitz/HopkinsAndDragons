@@ -9,19 +9,19 @@
           ControllerClass = require("../controllers/EditGamePlayers.js");
 
   handleGet = function(req, res, next){
-    var control = new ControllerClass(req._schemas, req.session.user, req.params.id);
+    var control = new ControllerClass(req._schemas, req._conf, req.session.user, req.params.id);
     var params = {};
 
     control.renderView(res, params);
   };
 
   handlePost = function(req, res, next){
-    var control = new ControllerClass(req._schemas, req.session.user, req.params.id);
+    var control = new ControllerClass(req._schemas, req._conf, req.session.user, req.params.id);
     var players = {
-      Rogue: req.body.rogue,
-      Sorcerer: req.body.Sorcerer,
-      Tinkerer: req.body.Tinkerer,
-      Knight: req.body.Knight
+      Rogue: (_.has(req.body, "Rogue") && req.body.Rogue !== "") ? req.body.Rogue : null,
+      Sorcerer: (_.has(req.body, "Sorcerer") && req.body.Sorcerer !== "") ? req.body.Sorcerer : null,
+      Tinkerer: (_.has(req.body, "Tinkerer") && req.body.Tinkerer !== "") ? req.body.Tinkerer : null,
+      Knight: (_.has(req.body, "Knight") && req.body.Knight !== "") ? req.body.Knight : null
     };
     control.changePlayers(players, function(err){
       if (err){

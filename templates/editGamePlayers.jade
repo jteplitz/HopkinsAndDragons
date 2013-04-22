@@ -17,12 +17,12 @@ block content
       h3 Setup Game Players
       .row-fluid
         .span9
-          form.form-horizontal
+          form.form-horizontal(method="POST")
             for owner,player in players
               .control-group
-                label.control-label(for="rogue") #{player}:
+                label.control-label(for="#{player}") #{player}:
                 .controls
-                  input(type="text", name="rogue", value="#{owner}")
+                  input(type="text", name="#{player}", value="#{owner}")
             .form-actions
               button.btn.btn-success(type="submit") Save
         .span3
