@@ -1,0 +1,29 @@
+extends layout
+
+block content
+  .row-fluid
+    .span2
+      h3 Edit Game
+      .nav.nav-tabs.nav-stacked
+        li
+          a(href="/game/#{game._id}/edit/map") Edit Map
+        li
+          a(href="/game/#{game._id}/edit/enemies") Edit Enemies
+        li
+          a(href="/game/#{game._id}/edit/story") Edit Story
+        li.active
+          a(href="/game/#{game._id}/edit/players") Setup Players
+    .span10
+      h3 Setup Game Players
+      .row-fluid
+        .span9
+          form.form-horizontal
+            for owner,player in players
+              .control-group
+                label.control-label(for="rogue") #{player}:
+                .controls
+                  input(type="text", name="rogue", value="#{owner}")
+            .form-actions
+              button.btn.btn-success(type="submit") Save
+        .span3
+          p Enter the player's email address in the boxes to the left
