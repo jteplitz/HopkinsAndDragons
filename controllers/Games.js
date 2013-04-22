@@ -22,8 +22,7 @@
   _ptype.prePrep = function(data, cb){
     var query = this.schemas.Game.find();
     query.or([
-      //this.schemas.Game.find().in({players: this.user._id}),
-      {players: this.user._id},
+      {"players.owner": this.user._id},
       {owner: this.user._id}
     ]);
     query.exec(function(err, results){

@@ -33,7 +33,7 @@
           if (game.owner !== user._id){
             var valid = false;
             for (var i = 0; i < game.players.length; i++){
-              if (game.players[i] === user._id){
+              if (game.players[i].owner === user._id){
                 valid = true;
               }
             }
