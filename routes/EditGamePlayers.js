@@ -16,7 +16,19 @@
   };
 
   handlePost = function(req, res, next){
-    
+    var control = new ControllerClass(req._schemas, req.session.user, req.params.id);
+    var players = {
+      Rogue: req.body.rogue,
+      Sorcerer: req.body.Sorcerer,
+      Tinkerer: req.body.Tinkerer,
+      Knight: req.body.Knight
+    };
+    control.changePlayers(players, function(err){
+      if (err){
+        return next(err);
+      }
+      control.renderView(res, {});
+    });
   };
   
   dispatch = {GET: handleGet, POST: handlePost};
