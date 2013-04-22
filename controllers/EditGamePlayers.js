@@ -57,6 +57,9 @@
     });
   };
 
+  _ptype.changePlayers = function(players, cb){
+  };
+
   getUser = function(schemas, id){
     return function(cb){
       schemas.User.findOne({_id: id}, cb);
