@@ -36,16 +36,16 @@
         Knight: ""
       };
       var asyncPlayers = {};
-      for (var i = 0; i < game.players.length; i++){
-        game.players[i] = game.players[i].toObject();
-        if (_.has(players, game.players[i].name)){
-          //players[game.players[i].name] = game.players[i].owner;
-          if (!_.has(game.players[i], "owner") || game.players[i].owner === null){
+      var gamePlayers = game.players.toObject();
+      console.log("got players", gamePlayers);
+      for (var i = 0; i < gamePlayers.length; i++){
+        if (_.has(players, gamePlayers[i].name)){
+          //players[gamePlayers[i].name] = gamePlayers[i].owner;
+          if (!_.has(gamePlayers[i], "owner") || gamePlayers[i].owner === null){
             continue;
           }
-          console.log("adding", game.players[i]);
 
-          asyncPlayers[game.players[i].name] = getUser(self.schemas, game.players[i].owner);
+          asyncPlayers[gamePlayers[i].name] = getUser(self.schemas, gamePlayers[i].owner);
         }
       }
 
