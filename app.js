@@ -91,6 +91,7 @@
     });
 
     io = io.listen(server);
+    io.set("log level", "2");
     sockets = new Sio(io, sessionStore, express.cookieParser(conf.get("secret")));
 
     // setup the Game Server
@@ -100,12 +101,17 @@
     sockets.on("connection", function(err, client, session){
       var game;
       client.on("join", function(data){
-        game = gameServer.joinGame(client, session.user, data);
+        game = gameServer.joinGame(client, session.user, data, function(err, joinedGame){
+          if (err){ return }
+          game = joinedGame;
+        });
       });
       client.on("ping", function(data){
         client.emit("ping", data);
       });
-      client.on("input", game.handleInput);
+      client.on("input", function(data){
+        game.handleInput(data, client);
+      });
     });
  });
 }());

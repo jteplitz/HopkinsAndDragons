@@ -1,26 +1,31 @@
-/*globals dragons _*/
+var isServer = (typeof _ === "undefined");
+var dragons  = (dragons instanceof Object) ? dragons : {};
+var _        = (_ instanceof Object)       ? _       : require("underscore");
+var $        = ($ instanceof Object) ? $ : {};
+
 (function(){
   "use strict";
-  
-  var isServer = (typeof _ === "undefined");
 
   if (isServer){
-    _ = require("underscore");
-    dragons = {};
-    require("./utils.js");
+    dragons.utils = require("./utils.js");
   }
 
   dragons.canvas = function(canvas, conf){
+    var canvasWidth, canvasHeight;
     if (!isServer){
       this.canvasElement = canvas;
       this.ctx           = canvas.getContext("2d");
+      canvasWidth        = $(this.canvasElement).width();
+      canvasHeight       = $(this.canvasElement).height();
     } else {
+      dragons.utils.setupConf(conf);
       dragons.globals    = conf.get("gameGlobals");
-      dragons.cleanGlobals();
+      dragons.utils.cleanGlobals();
+      canvasWidth        = canvas.width;
+      canvasHeight       = canvas.height;
     }
     this.elements      = [];
 
-    var canvasWidth  = $(this.canvasElement).width(), canvasHeight = $(this.canvasElement).height();
 
     this.update = function(){
       for (var i = 0; i < this.elements.length; i++){
@@ -169,4 +174,7 @@ dragons.createMovementVector = function(dx, dy){
       y : (dy * (dragons.globals.playerSpeed * 0.015))
   };
 };
+if (isServer){
+  module.exports = dragons;
+}
 }());

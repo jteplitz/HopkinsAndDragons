@@ -1,8 +1,18 @@
-/*globals dragons _*/
+var isServer = (typeof _ === "undefined");
+var dragons  = (dragons instanceof Object) ? dragons : module.exports;
+var _        = (_ instanceof Object) ? _ : require("underscore");
+var $        = ($ instanceof Object) ? $ : {};
+
 (function(){
   "use strict";
+
+  var exports;
  
-  dragons.utils = {
+  exports = {
+    setupConf: function(conf){
+      dragons.globals = conf.get("gameGlobals");
+      exports.cleanGlobals();
+    },
     detectMouseOver: function(element, e, offset){
       var position;
       if (! (element instanceof $)){
@@ -43,6 +53,13 @@
       dragons.globals.playerSpeeed = parseInt(dragons.globals.playerSpeeed, 10);
       dragons.globals.fakeLag = parseInt(dragons.globals.fakeLag, 10);
       dragons.globals.netOffset = parseInt(dragons.globals.netOffset, 10);
+      dragons.globals.bufferSize = parseInt(dragons.globals.bufferSize, 10);
+      dragons.globals.clientSmooth = parseInt(dragons.globals.clientSmooth, 10);
     }
   };
+  if (isServer){
+    module.exports = exports;
+  } else {
+    dragons.utils = exports;
+  }
 }());
