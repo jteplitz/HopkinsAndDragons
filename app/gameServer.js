@@ -51,6 +51,7 @@
             game.addClient(client);
             self.games[gameId] = game;
           }
+          return self.games[gameId];
       }
     });
   };
