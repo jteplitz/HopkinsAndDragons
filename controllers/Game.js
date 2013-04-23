@@ -14,7 +14,7 @@
     this.gameId   = gameId;
     this.user     = user;
 
-    this.payload = {title: ""};
+    this.payload = {title: "Play Game!"};
     this._view   = new ViewClass();
     
     var self = this;
@@ -25,6 +25,7 @@
 
 
   _ptype.prePrep = function(data, cb){
+    var self = this, i;
     getGame(this, true)(function(err, game){
       if (err){ return cb(err) }
 
@@ -33,7 +34,7 @@
         width: 1600
       };
       // get the map size
-      for (var i = 0; i < game.map.length; i++){
+      for (i = 0; i < game.map.length; i++){
         var mapPiece = game.map[i];
         if (mapPiece.y * 2 > mapSize.height - 150){
           mapSize.height += 200;
@@ -44,7 +45,15 @@
         }
       }
 
-      _.extend(data, {game: game, mapSize: mapSize});
+      var playerId = "";
+      // figure out which player we are
+      for (i = 0; i < game.players.length; i++){
+        if (game.players[i].owner === self.user._id){
+          playerId = game.players[i]._id;
+        }
+      }
+
+      _.extend(data, {game: game, mapSize: mapSize, your_id: playerId});
       cb();
     });
   };

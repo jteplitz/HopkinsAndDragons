@@ -1,16 +1,20 @@
-/*globals dragons _ io THREEx*/
-(function(){
+/*globals dragons _ io THREEx*/ (function(){
   "use strict";
 
   // functions
   var restoreMap, addPiece, addEnemy, main, sync, handleKeyDown, handleKeyUp, startGame,
+      setupPlayers, setupPlayer,
       updatePhysics, handleInput, createMovementVector, ping, handlePing,
+      handleServerUpdate, updateTimers,
       lerp, vLerp;
 
   // globals
-  var canvas, mapPieces = [], socket, guy, keyboard, observer = false,
+  var canvas, mapPieces = [], socket, players = [], yourGuy, keyboard, observer = false,
+      playersLoading = 0, active = false,
+      // physics globals
+      pdt = 0.001, pdte = new Date().getTime(),
       // network globals
-      netLatency = 0.001, netPing = 0.001, lastPingTime;
+      netLatency = 0.001, netPing = 0.001, lastPingTime, serverTime = 0, clientTime = 0, localTime, dt, dte;
 
   dragons.organizedMap = {};
 
@@ -34,20 +38,15 @@
       console.log("connected to game " +  data.gameId + " with " + (data.clientCount - 1) + " others"); });
 
     socket.on("start", function(data){
-      console.log("The game is starting");
+      localTime = data.time + netLatency;
+      active = true;
     });
 
     socket.on("ping", handlePing);
+    socket.on("update", handleServerUpdate);
 
-    var guyImage = new Image();
-    guyImage.onload = function(){
-      guy = new dragons.gameElements.Player(guyImage, 50, 50, 20, 20, 0, "", null);
-      
-      canvas.elements.push(guy);
-      startGame();
-    };
-    guyImage.src = "http://bbsimg.ngfiles.com/1/23542000/ngbbs4ee01350764a2.jpg";
-
+    setInterval(updateTimers, 4);
+    setupPlayers();
   });
 
   startGame = function(){
@@ -55,12 +54,53 @@
     main();
   };
 
+  updateTimers = function(){
+    dt         = new Date().getTime() - dte;
+    dte        = new Date().getTime();
+    localTime += dt/1000.0;
+  };
+
   updatePhysics = function(){
+    // update delta time
+    pdt = (new Date().getTime() - this._pdte)/1000.0;
+    pdte = new Date().getTime();
     canvas.update();
+  };
+
+  handleServerUpdate = function(state){
+    this.serverTime = state.time;
+    this.clientTime = this.serverTime - (dragons.globals.netOffset / 1000);
+  };
+
+  setupPlayers = function(){
+    for (var i = 0; i < dragons.players.length; i++){
+      var playerImage = new Image();
+      playerImage.onload = setupPlayer(playerImage, dragons.players[i]);
+      playerImage.src = dragons.players[i].image;
+      playersLoading++;
+    }
+  };
+
+  setupPlayer = function(image, playerInfo){
+    return function(){
+      var player = new dragons.gameElements.Player(image, 50, 50, playerInfo.x, playerInfo.y, playerInfo.name, playerInfo._id);
+      playersLoading--;
+      canvas.addElement(player);
+      players.push(canvas.elements[canvas.elements.length - 1]);
+
+      if (player._id === dragons.your_id){
+        yourGuy = player;
+      }
+      if (playersLoading === 0){
+        startGame();
+      }
+    };
   };
 
   // stores inputs as they come in. Will also send them to the server immediatly
   handleInput = function(){
+    if (!active){ return }
+
     var dx  = 0, dy = 0;
     var inputs = [];
     if (keyboard.pressed("left")){
@@ -80,14 +120,18 @@
       inputs.push("d");
     }
     if (inputs.length > 0){
-      guy.lastRecievedInput++;
-
-      guy.inputs.push({
+      yourGuy.inputs.push({
         inputs: inputs,
-        seq: guy.lastRecievedInput
-      }); // TODO attach frame time
+        seq: yourGuy.lastRecievedInput,
+        time: localTime
+      });
 
-      // TODO send to server
+      socket.send("input", {
+        inputs: inputs,
+        time: localTime,
+        seq: yourGuy.lastRecievedInput
+      });
+      yourGuy.lastRecievedInput++;
     }
   };
 
@@ -101,7 +145,7 @@
   // sends positions through the socket
   sync = function(){
     if (!observer){
-      socket.emit("position", {dx: guy.dx, dy: guy.dy, x: guy.x, y: guy.y});
+      //socket.emit("position", {dx: guy.dx, dy: guy.dy, x: guy.x, y: guy.y});
     }
   };
 
@@ -151,6 +195,7 @@
   handlePing = function(data){
     netPing    = new Date().getTime() - parseFloat(data.time, 10);
     netLatency = netPing / 2;
+    $("#ping").text("Ping: " + netPing + " m.s.");
   };
 
  //Simple linear interpolation

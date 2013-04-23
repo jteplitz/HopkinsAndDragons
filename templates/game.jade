@@ -5,6 +5,7 @@ block scripts
     dragons.enemies = !{JSON.stringify(game.enemies)};
     dragons.players = !{JSON.stringify(game.players)};
     dragons.map     = !{JSON.stringify(game.map)};  
+    dragons.your_id = !{JSON.stringify(your_id)};
     dragons.gameId  = "!{game._id}";
 
   script(type="text/javascript", src="/javascripts/keyboard.js")
@@ -21,3 +22,4 @@ block content
     .span10
       #canvasContainer
         canvas#map(width="#{mapSize.width}px", height="#{mapSize.height}px")
+      #ping

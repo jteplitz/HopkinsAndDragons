@@ -38,6 +38,11 @@
     cleanGlobals: function(){
       dragons.globals.map.roomWidth = parseInt(dragons.globals.map.roomWidth, 10);
       dragons.globals.map.roomHeight = parseInt(dragons.globals.map.roomHeight, 10);
+      dragons.globals.physicsUpdateTime = parseInt(dragons.globals.physicsUpdateTime, 10);
+      dragons.globals.serverSyncTime = parseInt(dragons.globals.serverSyncTime, 10);
+      dragons.globals.playerSpeeed = parseInt(dragons.globals.playerSpeeed, 10);
+      dragons.globals.fakeLag = parseInt(dragons.globals.fakeLag, 10);
+      dragons.globals.netOffset = parseInt(dragons.globals.netOffset, 10);
     }
   };
 }());

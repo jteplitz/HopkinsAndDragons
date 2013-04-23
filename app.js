@@ -98,12 +98,14 @@
 
 
     sockets.on("connection", function(err, client, session){
+      var game;
       client.on("join", function(data){
-        gameServer.joinGame(client, session.user, data);
+        game = gameServer.joinGame(client, session.user, data);
       });
       client.on("ping", function(data){
         client.emit("ping", data);
       });
+      client.on("input", game.handleInput);
     });
  });
 }());

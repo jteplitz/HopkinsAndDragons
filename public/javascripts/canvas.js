@@ -1,9 +1,23 @@
-/*globals dragons _*/ (function(){
+/*globals dragons _*/
+(function(){
   "use strict";
+  
+  var isServer = (typeof _ === "undefined");
 
-  dragons.canvas = function(canvas){
-    this.canvasElement = canvas;
-    this.ctx           = canvas.getContext("2d");
+  if (isServer){
+    _ = require("underscore");
+    dragons = {};
+    require("./utils.js");
+  }
+
+  dragons.canvas = function(canvas, conf){
+    if (!isServer){
+      this.canvasElement = canvas;
+      this.ctx           = canvas.getContext("2d");
+    } else {
+      dragons.globals    = conf.get("gameGlobals");
+      dragons.cleanGlobals();
+    }
     this.elements      = [];
 
     var canvasWidth  = $(this.canvasElement).width(), canvasHeight = $(this.canvasElement).height();
