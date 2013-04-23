@@ -17,14 +17,17 @@
 
   _ptype = gameServer.prototype;
 
-  _ptype.joinGame = function(client, user, data){
+  _ptype.joinGame = function(client, user, data, cb){
     var self = this;
 
     var gameId = data.gameId;
 
     // make sure this is a valid join request
     self.schemas.Game.findOne({_id: gameId}, function(err, game){
-      if (err){ return client.emit("error", {err: 500, msg: "Sorry, something went wrong while joining the game."}) }
+      if (err){
+        client.emit("error", {err: 500, msg: "Sorry, something went wrong while joining the game."});
+        return cb({err: 500});
+      }
 
       if (!_.isUndefined(game) && !_.isNull(game)){
         // the game exists
@@ -34,13 +37,17 @@
             for (var i = 0; i < game.players.length; i++){
               if (game.players[i].owner === user._id){
                 valid = true;
+                client.player_id = game.players[i]._id;
               }
             }
             if (!valid){
-              return client.emit("error", {err: 401, msg: "You are not allowed to join that game"});
+              client.emit("error", {err: 401, msg: "You are not allowed to join that game"});
+              return cb({err: 401});
             }
+          } else if (game.owner === user._id){
+            // I guess owners watch...?
+            client.player_id = null;
           }
-          console.log("joining game");
           client.user = user;
 
           // this is valid. Join (or create) the game
@@ -51,7 +58,7 @@
             game.addClient(client);
             self.games[gameId] = game;
           }
-          return self.games[gameId];
+          cb(null, self.games[gameId]);
       }
     });
   };

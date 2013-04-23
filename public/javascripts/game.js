@@ -5,16 +5,17 @@
   var restoreMap, addPiece, addEnemy, main, sync, handleKeyDown, handleKeyUp, startGame,
       setupPlayers, setupPlayer,
       updatePhysics, handleInput, createMovementVector, ping, handlePing,
-      handleServerUpdate, updateTimers,
+      handleServerUpdate, updateTimers, processServerUpdates,
       lerp, vLerp;
 
   // globals
-  var canvas, mapPieces = [], socket, players = [], yourGuy, keyboard, observer = false,
+  var canvas, mapPieces = [], socket, players = {}, yourGuy, keyboard, observer = false,
       playersLoading = 0, active = false,
       // physics globals
       pdt = 0.001, pdte = new Date().getTime(),
       // network globals
-      netLatency = 0.001, netPing = 0.001, lastPingTime, serverTime = 0, clientTime = 0, localTime, dt, dte;
+      netLatency = 0.001, netPing = 0.001, lastPingTime, serverTime = 0, clientTime = 0, localTime, dt, dte,
+      serverUpdates = [];
 
   dragons.organizedMap = {};
 
@@ -62,7 +63,7 @@
 
   updatePhysics = function(){
     // update delta time
-    pdt = (new Date().getTime() - this._pdte)/1000.0;
+    pdt = (new Date().getTime() - pdte)/1000.0;
     pdte = new Date().getTime();
     canvas.update();
   };
@@ -70,6 +71,78 @@
   handleServerUpdate = function(state){
     this.serverTime = state.time;
     this.clientTime = this.serverTime - (dragons.globals.netOffset / 1000);
+    
+    serverUpdates.push(state);
+    
+    // remove server updates that are too old TODO: this niumber isn't quite right
+    if (serverUpdates.length >= (60 * dragons.globals.bufferSize)){
+      serverUpdates.splice(0, 1);
+    }
+
+    // TODO correct client prediction
+  };
+
+  processServerUpdates = function(){
+    var i;
+    // find the oldest update unprocessed update
+    var count = serverUpdates.length - 1;
+
+    var target   = null;
+    var previous = null;
+
+    for (i = 0; i < count; i++){
+      var point      = serverUpdates[i];
+      var next_point = serverUpdates[i+1];
+
+      //Compare our point in time with the server times we have
+      if(localTime > point.time && localTime < next_point.time) {
+          target   = next_point;
+          previous = point;
+          break;
+      }
+    }
+    
+    if (_.isNull(target)){
+      // with no target we move to the last known positon
+      target   = serverUpdates[0];
+      previous = serverUpdates[0];
+    }
+
+    if (target && previous){ // proabably redundent
+       var targetTime     = target.time;
+
+       var difference     = targetTime - localTime;
+       var max_difference = (targetTime - previous.time);
+       var time_point     = (difference/max_difference);
+
+       // I guess target and previous can be equal if you have a super aweseome ping...
+       if(_.isNaN(time_point) ){
+         time_point = 0;
+       }
+       if(time_point === -Infinity){
+         time_point = 0;
+       }
+       if(time_point === Infinity){
+         time_point = 0;
+       }
+
+       var latestServerUpdate = serverUpdates[serverUpdates.length - 1];
+
+       for (var player in target.pos){
+         if (target.pos.hasOwnProperty(player)){
+           if (players[player]._id === dragons.your_id){
+             // TODO smoothly correct our own position
+             continue; // For now we don't change ourselves
+           }
+          
+           var currentPosition = {x: players[player].x, y: players[player].y};
+           var newPosition     = vLerp(currentPosition, target.pos[player], pdt * dragons.globals.clientSmooth);
+           console.log("lerping to", newPosition);
+           players[player].x = newPosition.x;
+           players[player].y = newPosition.y;
+         }
+       }
+    }
   };
 
   setupPlayers = function(){
@@ -86,7 +159,7 @@
       var player = new dragons.gameElements.Player(image, 50, 50, playerInfo.x, playerInfo.y, playerInfo.name, playerInfo._id);
       playersLoading--;
       canvas.addElement(player);
-      players.push(canvas.elements[canvas.elements.length - 1]);
+      players[playerInfo._id] = canvas.elements[canvas.elements.length - 1];
 
       if (player._id === dragons.your_id){
         yourGuy = player;
@@ -126,7 +199,7 @@
         time: localTime
       });
 
-      socket.send("input", {
+      socket.emit("input", {
         inputs: inputs,
         time: localTime,
         seq: yourGuy.lastRecievedInput
@@ -137,6 +210,7 @@
 
   main = function(){
     handleInput();
+    processServerUpdates();
     canvas.draw();
     //sync();
     window.requestAnimationFrame( main.bind(this), $("#map")[0]);
@@ -201,5 +275,6 @@
  //Simple linear interpolation
  lerp = function(p, n, t) { var _t = Number(t); _t = (Math.max(0, Math.min(1, _t))).fixed(); return (p + _t * (n - p)).fixed(); };
  //Simple linear interpolation between 2 vectors
- vLerp = function(v,tv,t) { return { x: this.lerp(v.x, tv.x, t), y:this.lerp(v.y, tv.y, t) }; };
+ vLerp = function(v,tv,t) { return { x: lerp(v.x, tv.x, t), y: lerp(v.y, tv.y, t) }; };
+ Number.prototype.fixed = function(n) { n = n || 3; return parseFloat(this.toFixed(n)); }; // I don't love doing this...
 }());
