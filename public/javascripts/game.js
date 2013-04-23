@@ -3,7 +3,8 @@
   "use strict";
 
   // functions
-  var restoreMap, addPiece, addEnemy, main, sync, handleKeyDown, handleKeyUp, observer = false;
+  var restoreMap, addPiece, addEnemy, main, sync, handleKeyDown, handleKeyUp, observer = false,
+      updatePhysics;
 
   // globals
   var canvas, mapPieces = [], socket, guy;
@@ -39,8 +40,13 @@
     };
     guyImage.src = "http://bbsimg.ngfiles.com/1/23542000/ngbbs4ee01350764a2.jpg";
 
-    setInterval(main, 50);
+    setInterval(updatePhysics, dragons.globals.physicsUpdateTime);
+    main();
   });
+
+  updatePhysics = function(){
+    canvas.update();
+  };
 
   handleKeyDown = function(e){
     if (observer){
@@ -78,8 +84,9 @@
   };
 
   main = function(){
-    canvas.update();
+    canvas.draw();
     //sync();
+    window.requestAnimationFrame( main.bind(this), $("#map")[0]);
   };
 
   // sends positions through the socket
