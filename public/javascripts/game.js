@@ -1,22 +1,21 @@
-/*globals dragons _ io*/
+/*globals dragons _ io THREEx*/
 (function(){
   "use strict";
 
   // functions
   var restoreMap, addPiece, addEnemy, main, sync, handleKeyDown, handleKeyUp, observer = false,
-      updatePhysics;
+      updatePhysics, handleInput, processInput, createMovementVector;
 
   // globals
-  var canvas, mapPieces = [], socket, guy;
+  var canvas, mapPieces = [], socket, guy, keyboard;
 
   dragons.organizedMap = {};
 
   $(document).ready(function(){
     canvas = new dragons.canvas($("#map")[0]);
     restoreMap();
+    keyboard = new THREEx.KeyboardState();
 
-    $(document).on("keydown", handleKeyDown);
-    $(document).on("keyup", handleKeyUp);
     $("#observe").click(function(){ observer = !observer});
 
     socket = io.connect(window.location.url);
@@ -36,54 +35,107 @@
     var guyImage = new Image();
     guyImage.onload = function(){
       guy = new dragons.gameElements.image(guyImage, 50, 50, 20, 20, 0, null);
+      
+      // TODO create a player element class to handle this
+      guy.inputs = [];
+      guy.lastRecievedInput = 0;
+      guy.lastHandledInput  = 0;
+
       canvas.elements.push(guy);
+      setInterval(updatePhysics, dragons.globals.physicsUpdateTime);
+      main();
     };
     guyImage.src = "http://bbsimg.ngfiles.com/1/23542000/ngbbs4ee01350764a2.jpg";
 
-    setInterval(updatePhysics, dragons.globals.physicsUpdateTime);
-    main();
   });
 
   updatePhysics = function(){
+    // TODO this should all be handled in the player update method
+    var guyMovement = processInput();
+    guy.x = guy.x + guyMovement.x;
+    guy.y = guy.y + guyMovement.y;
     canvas.update();
   };
 
-  handleKeyDown = function(e){
-    if (observer){
-      return;
+  // stores inputs as they come in. Will also send them to the server immediatly
+  handleInput = function(){
+    var dx  = 0, dy = 0;
+    var inputs = [];
+    if (keyboard.pressed("left")){
+      dx = -1;
+      inputs.push("l");
     }
+    if (keyboard.pressed("right")){
+      dx = 1;
+      inputs.push("r");
+    }
+    if (keyboard.pressed("up")){
+      dy = -1;
+      inputs.push("u");
+    }
+    if (keyboard.pressed("down")){
+      dy = 1;
+      inputs.push("d");
+    }
+    if (inputs.length > 0){
+      guy.lastRecievedInput++;
 
-    switch(e.which){
-      case 37:
-        guy.dx = -5;
-        e.preventDefault();
-        break;
-      case 38:
-        guy.dy = -5;
-        e.preventDefault();
-        break;
-      case 39:
-        guy.dx = 5;
-        e.preventDefault();
-        break;
-      case 40:
-        guy.dy = 5;
-        e.preventDefault();
-        break;
+      guy.inputs.push({
+        inputs: inputs,
+        seq: guy.lastRecievedInput
+      }); // TODO attach frame time
+
+      // TODO send to server
     }
   };
 
-  handleKeyUp = function(e){
-    if (e.which === 37 || e.which === 39){
-      e.preventDefault();
-      guy.dx = 0;
-    } else if (e.which === 38 || e.which === 40){
-      e.preventDefault();
-      guy.dy = 0;
+  processInput = function(){
+    var dx = 0, dy = 0;
+    
+    for (var i = 0; i < guy.inputs.length; i++){
+      if (guy.inputs[i].seq <= guy.lastHandledInput){
+        continue; // we've already moved him this much. TODO: remove inputs after server handling
+      }
+      
+      var input = guy.inputs[i].inputs;
+
+      // loop through each input in the sequence
+      for (var j = 0; j < input.length; j++){
+        switch (input[j]){
+          case "l":
+            dx -= 1;
+            break;
+          case "r":
+            dx += 1;
+            break;
+          case "u":
+            dy -= 1;
+            break;
+          case "d":
+            dy += 1;
+            break;
+        }
+      }
     }
+
+    // now apply the movement
+    if (guy.inputs.length > 0){
+      // update the lastHandledInput
+      guy.lastHandledInput = guy.inputs[guy.inputs.length - 1].seq;
+    }
+    return createMovementVector(dx, dy);
+  };
+
+  createMovementVector = function(dx, dy){
+    //Must be fixed step, at physics sync speed.
+    return {
+        x : (dx * (dragons.globals.playerSpeed * 0.015)),
+        y : (dy * (dragons.globals.playerSpeed * 0.015))
+    };
   };
 
   main = function(){
+    handleInput();
     canvas.draw();
     //sync();
     window.requestAnimationFrame( main.bind(this), $("#map")[0]);
