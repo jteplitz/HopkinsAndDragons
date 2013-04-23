@@ -3,6 +3,7 @@ extends layout
 block scripts
   script(type="text/javascript")
     dragons.enemies = !{JSON.stringify(game.enemies)};
+    dragons.players = !{JSON.stringify(game.players)};
     dragons.map     = !{JSON.stringify(game.map)};  
     dragons.gameId  = "!{game._id}";
 

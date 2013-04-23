@@ -101,6 +101,9 @@
       client.on("join", function(data){
         gameServer.joinGame(client, session.user, data);
       });
+      client.on("ping", function(data){
+        client.emit("ping", data);
+      });
     });
  });
 }());
