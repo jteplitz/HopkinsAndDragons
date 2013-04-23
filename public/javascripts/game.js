@@ -83,6 +83,9 @@
   };
 
   processServerUpdates = function(){
+    if (serverUpdates.length === 0){
+      return;
+    }
     var i;
     // find the oldest update unprocessed update
     var count = serverUpdates.length - 1;
@@ -104,8 +107,8 @@
     
     if (_.isNull(target)){
       // with no target we move to the last known positon
-      target   = serverUpdates[0];
-      previous = serverUpdates[0];
+      target   = serverUpdates[serverUpdates.length - 1];
+      previous = serverUpdates[serverUpdates.length - 1];
     }
 
     if (target && previous){ // proabably redundent
@@ -125,6 +128,7 @@
        if(time_point === Infinity){
          time_point = 0;
        }
+       time_point = time_point.fixed(3);
 
        var latestServerUpdate = serverUpdates[serverUpdates.length - 1];
 
@@ -137,7 +141,6 @@
           
            var currentPosition = {x: players[player].x, y: players[player].y};
            var newPosition     = vLerp(currentPosition, target.pos[player], pdt * dragons.globals.clientSmooth);
-           console.log("lerping to", newPosition);
            players[player].x = newPosition.x;
            players[player].y = newPosition.y;
          }
@@ -272,9 +275,9 @@
     $("#ping").text("Ping: " + netPing + " m.s.");
   };
 
- //Simple linear interpolation
- lerp = function(p, n, t) { var _t = Number(t); _t = (Math.max(0, Math.min(1, _t))).fixed(); return (p + _t * (n - p)).fixed(); };
- //Simple linear interpolation between 2 vectors
- vLerp = function(v,tv,t) { return { x: lerp(v.x, tv.x, t), y: lerp(v.y, tv.y, t) }; };
- Number.prototype.fixed = function(n) { n = n || 3; return parseFloat(this.toFixed(n)); }; // I don't love doing this...
+  //Simple linear interpolation
+  lerp = function(p, n, t) { var _t = Number(t); _t = (Math.max(0, Math.min(1, _t))).fixed(); return (p + _t * (n - p)).fixed(); };
+  //Simple linear interpolation between 2 vectors
+  vLerp = function(v,tv,t) { return { x: lerp(v.x, tv.x, t), y: lerp(v.y, tv.y, t) }; };
+  Number.prototype.fixed = function(n) { n = n || 3; return parseFloat(this.toFixed(n)); }; // I don't love doing this...
 }());
