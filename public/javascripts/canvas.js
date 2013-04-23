@@ -89,15 +89,70 @@
       this.draw = function(ctx){
         this.image.draw(ctx);
       };
-    }
-  };
+    },
+    Player: function(image, width, height, x, y, name, id){
+      dragons.gameElements.image.call(this, image, width, height, x, y, 0, id);
 
-  dragons.RoomElement = function(image, width, height, x, y, rotate, doorLeft, doorRight, doorTop, doorBottom, id){
-    dragons.gameElements.image.call(this, image, width, height, x, y, rotate, id);
+      this.name = name;
+      this.inputs = [];
+      this.lastRecievedInput = 0;
+      this.lastHandledInput  = 0;
 
-    this.doorLeft   = doorLeft;
-    this.doorRight  = doorRight;
-    this.doorTop    = doorTop;
-    this.doorBottom = doorBottom;
+      this.update = function(){
+        var dx = 0, dy = 0;
+        
+        for (var i = 0; i < this.inputs.length; i++){
+          if (this.inputs[i].seq <= this.lastHandledInput){
+            continue; // we've already moved him this much. TODO: remove inputs after server handling
+          }
+          
+          var input = this.inputs[i].inputs;
+
+          // loop through each input in the sequence
+          for (var j = 0; j < input.length; j++){
+            switch (input[j]){
+              case "l":
+                dx -= 1;
+                break;
+              case "r":
+                dx += 1;
+                break;
+              case "u":
+                dy -= 1;
+                break;
+              case "d":
+                dy += 1;
+                break;
+            }
+          }
+        }
+
+      // now apply the movement
+      if (this.inputs.length > 0){
+        // update the lastHandledInput
+        this.lastHandledInput = this.inputs[this.inputs.length - 1].seq;
+      }
+      var movement = dragons.createMovementVector(dx, dy);
+      this.x += movement.x;
+      this.y += movement.y;
+    };
+  }
+};
+
+dragons.RoomElement = function(image, width, height, x, y, rotate, doorLeft, doorRight, doorTop, doorBottom, id){
+  dragons.gameElements.image.call(this, image, width, height, x, y, rotate, id);
+
+  this.doorLeft   = doorLeft;
+  this.doorRight  = doorRight;
+  this.doorTop    = doorTop;
+  this.doorBottom = doorBottom;
+};
+
+dragons.createMovementVector = function(dx, dy){
+  //Must be fixed step, at physics sync speed.
+  return {
+      x : (dx * (dragons.globals.playerSpeed * 0.015)),
+      y : (dy * (dragons.globals.playerSpeed * 0.015))
   };
+};
 }());

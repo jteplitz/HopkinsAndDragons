@@ -21,7 +21,6 @@
     var self = this;
 
     var gameId = data.gameId;
-    console.log("recieved a request to join game: " + gameId);
 
     // make sure this is a valid join request
     self.schemas.Game.findOne({_id: gameId}, function(err, game){

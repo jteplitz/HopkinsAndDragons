@@ -3,15 +3,20 @@
   "use strict";
 
   // functions
-  var restoreMap, addPiece, addEnemy, main, sync, handleKeyDown, handleKeyUp, observer = false,
-      updatePhysics, handleInput, processInput, createMovementVector;
+  var restoreMap, addPiece, addEnemy, main, sync, handleKeyDown, handleKeyUp, startGame,
+      updatePhysics, handleInput, createMovementVector, ping, handlePing,
+      lerp, vLerp;
 
   // globals
-  var canvas, mapPieces = [], socket, guy, keyboard;
+  var canvas, mapPieces = [], socket, guy, keyboard, observer = false,
+      // network globals
+      netLatency = 0.001, netPing = 0.001, lastPingTime;
 
   dragons.organizedMap = {};
 
   $(document).ready(function(){
+    setInterval(ping, 1000); // begin tracking ping immediatly
+
     canvas = new dragons.canvas($("#map")[0]);
     restoreMap();
     keyboard = new THREEx.KeyboardState();
@@ -32,28 +37,25 @@
       console.log("The game is starting");
     });
 
+    socket.on("ping", handlePing);
+
     var guyImage = new Image();
     guyImage.onload = function(){
-      guy = new dragons.gameElements.image(guyImage, 50, 50, 20, 20, 0, null);
+      guy = new dragons.gameElements.Player(guyImage, 50, 50, 20, 20, 0, "", null);
       
-      // TODO create a player element class to handle this
-      guy.inputs = [];
-      guy.lastRecievedInput = 0;
-      guy.lastHandledInput  = 0;
-
       canvas.elements.push(guy);
-      setInterval(updatePhysics, dragons.globals.physicsUpdateTime);
-      main();
+      startGame();
     };
     guyImage.src = "http://bbsimg.ngfiles.com/1/23542000/ngbbs4ee01350764a2.jpg";
 
   });
 
+  startGame = function(){
+    setInterval(updatePhysics, dragons.globals.physicsUpdateTime);
+    main();
+  };
+
   updatePhysics = function(){
-    // TODO this should all be handled in the player update method
-    var guyMovement = processInput();
-    guy.x = guy.x + guyMovement.x;
-    guy.y = guy.y + guyMovement.y;
     canvas.update();
   };
 
@@ -87,51 +89,6 @@
 
       // TODO send to server
     }
-  };
-
-  processInput = function(){
-    var dx = 0, dy = 0;
-    
-    for (var i = 0; i < guy.inputs.length; i++){
-      if (guy.inputs[i].seq <= guy.lastHandledInput){
-        continue; // we've already moved him this much. TODO: remove inputs after server handling
-      }
-      
-      var input = guy.inputs[i].inputs;
-
-      // loop through each input in the sequence
-      for (var j = 0; j < input.length; j++){
-        switch (input[j]){
-          case "l":
-            dx -= 1;
-            break;
-          case "r":
-            dx += 1;
-            break;
-          case "u":
-            dy -= 1;
-            break;
-          case "d":
-            dy += 1;
-            break;
-        }
-      }
-    }
-
-    // now apply the movement
-    if (guy.inputs.length > 0){
-      // update the lastHandledInput
-      guy.lastHandledInput = guy.inputs[guy.inputs.length - 1].seq;
-    }
-    return createMovementVector(dx, dy);
-  };
-
-  createMovementVector = function(dx, dy){
-    //Must be fixed step, at physics sync speed.
-    return {
-        x : (dx * (dragons.globals.playerSpeed * 0.015)),
-        y : (dy * (dragons.globals.playerSpeed * 0.015))
-    };
   };
 
   main = function(){
@@ -185,4 +142,19 @@
       return enemy;
     };
   };
+
+  ping = function(){
+    lastPingTime = new Date().getTime() - dragons.globals.fakeLag;
+    socket.emit("ping", {time: lastPingTime});
+  };
+
+  handlePing = function(data){
+    netPing    = new Date().getTime() - parseFloat(data.time, 10);
+    netLatency = netPing / 2;
+  };
+
+ //Simple linear interpolation
+ lerp = function(p, n, t) { var _t = Number(t); _t = (Math.max(0, Math.min(1, _t))).fixed(); return (p + _t * (n - p)).fixed(); };
+ //Simple linear interpolation between 2 vectors
+ vLerp = function(v,tv,t) { return { x: this.lerp(v.x, tv.x, t), y:this.lerp(v.y, tv.y, t) }; };
 }());
