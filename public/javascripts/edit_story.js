@@ -25,6 +25,7 @@
 
   main = function(){
     canvas.update();
+    canvas.draw();
   };
 
   

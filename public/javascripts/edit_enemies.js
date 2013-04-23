@@ -32,6 +32,7 @@
 
   main = function(){
     canvas.update();
+    canvas.draw();
   };
 
   // goes through the enemies and syncs them if need be

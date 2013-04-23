@@ -235,6 +235,7 @@
 
   main = function(){
     canvas.update();
+    canvas.draw();
   };
 
   // selects a piece. Just sets a var for now, but will add color and stuff later
