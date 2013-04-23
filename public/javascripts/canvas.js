@@ -9,9 +9,14 @@
     var canvasWidth  = $(this.canvasElement).width(), canvasHeight = $(this.canvasElement).height();
 
     this.update = function(){
-      this.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       for (var i = 0; i < this.elements.length; i++){
         this.elements[i].update();
+      }
+    };
+
+    this.draw = function(){
+      this.ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      for (var i = 0; i < this.elements.length; i++){
         this.elements[i].draw(this.ctx);
       }
     };
