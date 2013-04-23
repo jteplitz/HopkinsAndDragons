@@ -6,6 +6,7 @@
       setupPlayers, setupPlayer,
       updatePhysics, handleInput, createMovementVector, ping, handlePing,
       handleServerUpdate, updateTimers, processServerUpdates,
+      updateFrameRate,
       lerp, vLerp;
 
   // globals
@@ -15,7 +16,9 @@
       pdt = 0.001, pdte = new Date().getTime(),
       // network globals
       netLatency = 0.001, netPing = 0.001, lastPingTime, serverTime = 0, clientTime = 0, localTime, dt, dte,
-      serverUpdates = [];
+      lastLocalTime = 0,
+      serverUpdates = [],
+      updateTimes  = [];
 
   dragons.organizedMap = {};
 
@@ -212,6 +215,12 @@
   };
 
   main = function(){
+    updateTimes.push(localTime - lastLocalTime);
+    lastLocalTime = localTime;
+    if (updateTimes.length === 10){
+      updateFrameRate();
+      updateTimes.splice(0);
+    }
     handleInput();
     processServerUpdates();
     canvas.draw();
@@ -273,6 +282,15 @@
     netPing    = new Date().getTime() - parseFloat(data.time, 10);
     netLatency = netPing / 2;
     $("#ping").text("Ping: " + netPing + " m.s.");
+  };
+
+  updateFrameRate = function(){
+    var sum = 0;
+    for (var i = 0; i < updateTimes.length; i++){
+      sum += updateTimes[i];
+    }
+    sum /= i;
+    $("#frameRate").text((1 / sum) + " FPS");
   };
 
   //Simple linear interpolation
