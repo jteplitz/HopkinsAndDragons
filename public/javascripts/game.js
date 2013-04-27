@@ -5,7 +5,7 @@
   var restoreMap, addPiece, addEnemy, main, sync, handleKeyDown, handleKeyUp, startGame,
       setupPlayers, setupPlayer,
       updatePhysics, handleInput, createMovementVector, ping, handlePing,
-      handleServerUpdate, updateTimers, processServerUpdates,
+      handleServerUpdate, updateTimers, processServerUpdates, handleServerError,
       updateFrameRate,
       lerp, vLerp;
 
@@ -48,6 +48,7 @@
 
     socket.on("ping", handlePing);
     socket.on("update", handleServerUpdate);
+    socket.on("error", handleServerError);
 
     setInterval(updateTimers, 4);
     setupPlayers();
@@ -144,6 +145,7 @@
           
            var currentPosition = {x: players[player].x, y: players[player].y};
            var newPosition     = vLerp(currentPosition, target.pos[player], pdt * dragons.globals.clientSmooth);
+           console.log("lerping to", newPosition, target.pos[player]);
            players[player].x = newPosition.x;
            players[player].y = newPosition.y;
          }
@@ -291,6 +293,12 @@
     }
     sum /= i;
     $("#frameRate").text((1 / sum) + " FPS");
+  };
+
+  // for now just alert the error
+  handleServerError = function(err){
+    console.log("error", err);
+    alert(err.msg);
   };
 
   //Simple linear interpolation

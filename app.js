@@ -17,10 +17,11 @@
       io        = require("socket.io"),
       Sio       = require("session.socket.io"),
       GameServer = require("./app/gameServer.js"),
-      path = require('path');
+      path = require('path'),
+      fakeLag = parseInt(conf.get("gameGlobals:fakeLag"), 10);
 
   var app = express(), server,
-      sessionStore, sockets, gameServer;
+      sessionStore, sockets, gameServer, setupNewClient;
 
   mongoose.connect(conf.get("mongo"));
 
@@ -99,19 +100,32 @@
 
 
     sockets.on("connection", function(err, client, session){
-      var game;
+      var game =  null;
       client.on("join", function(data){
         game = gameServer.joinGame(client, session.user, data, function(err, joinedGame){
-          if (err){ return }
+          if (err){ return client.emit("error", err); }
           game = joinedGame;
+          setupNewClient(game, client);
         });
-      });
-      client.on("ping", function(data){
-        client.emit("ping", data);
-      });
-      client.on("input", function(data){
-        game.handleInput(data, client);
       });
     });
  });
+  setupNewClient = function(game, client){
+    console.log("setting up", client.user._id);
+    client.on("ping", function(data){
+      client.emit("ping", data);
+    });
+    client.on("input", function(data){
+      if (fakeLag > 0){
+        setTimeout(function(){ game.handleInput(data, client) }, fakeLag);
+      } else {
+        game.handleInput(data, client);
+      }
+    });
+    client.on("disconnect", function(){
+      console.log("got disconnect");
+      gameServer.leaveGame(game, client);
+      game = null;
+    });
+  };
 }());
