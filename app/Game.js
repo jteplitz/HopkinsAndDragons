@@ -59,6 +59,16 @@
 
   _ptype = Game.prototype;
 
+  _ptype.removeClient = function(client){
+    for (var i = 0; i < this.clients.length; i++){
+      if (this.clients[i].user._id === client.user._id){
+        console.log("removing client");
+        this.clients.splice(i, 1);
+        break;
+      }
+    }
+  };
+
   _ptype.physicsUpdate = function(){
     this.canvas.update();
   };
@@ -77,7 +87,6 @@
       time: this.localTime,
       pos: playerPositions
     };
-    console.log("sending game state", gameState);
     this.sockets["in"](this.room).emit("update", gameState);
   };
 
@@ -88,15 +97,23 @@
   };
 
   _ptype.addClient = function(client){
+    // make sure they're not already connected
+    for (var i = 0; i < this.clients.length; i++){
+      if (this.clients[i].user._id === client.user._id){
+        return false;
+      }
+    }
     this.clients.push(client);
     client.join(this.room);
     client.emit("connected", {gameId: this.gameId, clientCount: this.clients.length});
     console.log("connected to", this.room);
 
+
     if(this.clients.length >=  2){
       // we're ready to go
       this.start();
     }
+    return true;
   };
 
   _ptype.start = function(){

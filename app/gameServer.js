@@ -51,16 +51,29 @@
           client.user = user;
 
           // this is valid. Join (or create) the game
+          var added = true;
           if (_.has(self.games, gameId)){
-            self.games[gameId].addClient(client);
+            added = self.games[gameId].addClient(client);
           } else {
             game = new Game(gameId, game, self.sockets);
             game.addClient(client);
             self.games[gameId] = game;
           }
-          cb(null, self.games[gameId]);
+          if (added){
+            cb(null, self.games[gameId]);
+          } else {
+            cb({err: 400, msg: "Unable to connect. You're already connected to this game"});
+          }
       }
     });
+  };
+
+  _ptype.leaveGame = function(game, client){
+    game.removeClient(client);
+    if (game.clients.length === 0){
+      console.log("removing game", game.gameId);
+      delete this.games[game.gameId];
+    }
   };
 
 
