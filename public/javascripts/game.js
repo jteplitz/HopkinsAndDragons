@@ -43,6 +43,10 @@
 
     socket.on("start", function(data){
       localTime = data.time + netLatency;
+      var inputNum = data.inputNums[dragons.your_id];
+      yourGuy.lastRecievedInput = inputNum;
+      yourGuy.lastHandledInput  = inputNum;
+
       active = true;
     });
 
@@ -56,6 +60,7 @@
 
   startGame = function(){
     setInterval(updatePhysics, dragons.globals.physicsUpdateTime);
+
     main();
   };
 
@@ -103,9 +108,9 @@
 
       //Compare our point in time with the server times we have
       if(localTime > point.time && localTime < next_point.time) {
-          target   = next_point;
-          previous = point;
-          break;
+        target   = next_point;
+        previous = point;
+        break;
       }
     }
     
@@ -145,7 +150,6 @@
           
            var currentPosition = {x: players[player].x, y: players[player].y};
            var newPosition     = vLerp(currentPosition, target.pos[player], pdt * dragons.globals.clientSmooth);
-           console.log("lerping to", newPosition, target.pos[player]);
            players[player].x = newPosition.x;
            players[player].y = newPosition.y;
          }

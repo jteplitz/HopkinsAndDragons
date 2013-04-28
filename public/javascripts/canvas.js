@@ -147,7 +147,7 @@ var $        = ($ instanceof Object) ? $ : {};
         }
 
       // now apply the movement
-      if (this.inputs.length > 0){
+      if (this.inputs.length > 0 && this.lastHandledInput < this.inputs[this.inputs.length - 1].seq){
         // update the lastHandledInput
         this.lastHandledInput = this.inputs[this.inputs.length - 1].seq;
       }

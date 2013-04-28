@@ -9,18 +9,21 @@
 
       // physics stuff
       physicsUpdateTime = conf.get("gameGlobals:physicsUpdateTime"),
-      gameUpdateTime    = conf.get("gameGlobals:serverSyncTime");
+      gameUpdateTime    = conf.get("gameGlobals:serverSyncTime"),
+      saveGameTime      = conf.get("gameGlobals:saveGameTime");
 
       // load the game classes
       var dragons = require("../public/javascripts/canvas.js");
   
   Game = function(id, gameInfo, sockets){
-    this.gameId   = id;
-    this.gameInfo = gameInfo;
-    this.sockets  = sockets;
-    this.players  = {};
-    this.room     = "/game/" + id;
-    this.clients  = [];
+    console.log("setting up game");
+    this.gameId    = id;
+    this.gameInfo  = gameInfo;
+    this.sockets   = sockets;
+    this.players   = {};
+    this.room      = "/game/" + id;
+    this.clients   = [];
+    this.intervals = [];
 
     this._dt = 0;
     this._dte = 0;
@@ -44,9 +47,10 @@
 
     this.canvas = new dragons.canvas({width: mapSize.width, height: mapSize.height}, conf);
 
-    setInterval(this.physicsUpdate.bind(this), physicsUpdateTime);
-    setInterval(this.gameUpdate.bind(this), gameUpdateTime);
-    setInterval(this.updateTimers.bind(this), 4);
+    this.intervals.push(setInterval(this.physicsUpdate.bind(this), physicsUpdateTime));
+    this.intervals.push(setInterval(this.gameUpdate.bind(this), gameUpdateTime));
+    this.intervals.push(setInterval(this.updateTimers.bind(this), 4));
+    this.intervals.push(setInterval(this.saveGame.bind(this), saveGameTime));
 
     // setup the players
     for (i = 0; i < this.gameInfo.players.length; i++){
@@ -118,7 +122,14 @@
 
   _ptype.start = function(){
     console.log("starting game");
-    this.sockets["in"](this.room).emit("start", {time: this.localTime});
+    var seqNums = {};
+    // reset player move seq numbers
+    for (var player in this.players){
+      if (this.players.hasOwnProperty(player)){
+        seqNums[this.players[player]._id] = this.players[player].lastHandledInput;
+      }
+    }
+    this.sockets["in"](this.room).emit("start", {time: this.localTime, inputNums: seqNums});
   };
 
   _ptype.handleInput = function(data, client){
@@ -129,6 +140,27 @@
       seq: data.seq,
       time: data.time
     });
+  };
+
+  // saves game state in db
+  _ptype.saveGame = function(cb){
+    // update positions
+    for (var i = 0; i < this.gameInfo.players.length; i++){
+      var player = this.gameInfo.players[i];
+      if (_.has(this.players, player._id)){
+        player.x = this.players[player._id].x;
+        player.y = this.players[player._id].y;
+        // TODO save level
+      }
+    }
+
+    this.gameInfo.save(cb);
+  };
+
+  // cleans up a game before delation
+  _ptype.destroy = function(cb){
+    this.intervals.splice(0);
+    this.saveGame(cb);
   };
 
   module.exports = Game;

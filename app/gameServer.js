@@ -69,10 +69,13 @@
   };
 
   _ptype.leaveGame = function(game, client){
+    var self = this;
     game.removeClient(client);
     if (game.clients.length === 0){
       console.log("removing game", game.gameId);
-      delete this.games[game.gameId];
+      this.games[game.gameId].destroy(function(){
+        delete self.games[game.gameId];
+      });
     }
   };
 
