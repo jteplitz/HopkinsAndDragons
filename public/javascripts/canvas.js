@@ -152,8 +152,50 @@ var $        = ($ instanceof Object) ? $ : {};
         this.lastHandledInput = this.inputs[this.inputs.length - 1].seq;
       }
       var movement = dragons.createMovementVector(dx, dy);
-      this.x += movement.x;
-      this.y += movement.y;
+
+      // check for wall collisions
+      var possibleX = this.x + movement.x,
+      possibleY     = this.y + movement.y,
+      roomWidth     = dragons.globals.map.roomWidth * 2,
+      roomHeight    = dragons.globals.map.roomHeight * 2,
+      wallWidth     = dragons.globals.map.wallWidth * 2,
+      wallHeight    = dragons.globals.map.wallHeight * 2,
+      pieceX        = Math.floor(possibleX / roomWidth) * roomWidth,
+      pieceY        = Math.floor(possibleY / roomHeight) * roomHeight;
+
+      if (possibleX % roomWidth <= wallWidth &&
+        _.has(dragons.organizedMap, pieceX) && _.has(dragons.organizedMap[pieceX], pieceY) &&
+        !dragons.organizedMap[pieceX][pieceY].doorLeft){
+        // left wall collision
+        // place it right at the edge of the wall
+        this.x = pieceX + wallWidth;
+      } else if ((possibleX + this.width) % roomWidth >= roomWidth - wallWidth &&
+               _.has(dragons.organizedMap, pieceX) && _.has(dragons.organizedMap[pieceX], pieceY) &&
+               !dragons.organizedMap[pieceX][pieceY].doorRight){
+        // right wall collision
+        // place it right at the edge of the wall
+        this.x = pieceX + roomWidth - wallWidth - this.width;
+      } else {
+        // not on a wall
+        this.x = possibleX;
+      }
+
+      if (possibleY % roomHeight <= wallHeight &&
+        _.has(dragons.organizedMap, pieceX) && _.has(dragons.organizedMap[pieceX], pieceY) &&
+        !dragons.organizedMap[pieceX][pieceY].doorTop){
+        // top wall collision
+        // place it right at the edge of the wall
+        this.y = pieceY + wallHeight;
+      } else if ((possibleY + this.height) % roomHeight >= roomHeight - wallHeight &&
+                  _.has(dragons.organizedMap, pieceX) && _.has(dragons.organizedMap[pieceX], pieceY) &&
+                  !dragons.organizedMap[pieceX][pieceY].doorBottom){
+        // bottom wall collision
+        // place it right at the edge of the wall
+        this.y = pieceY + roomHeight - wallHeight - this.height;
+      } else {
+        // not on a wall
+        this.y = possibleY;
+      }
     };
   }
 };
