@@ -18,6 +18,7 @@
   Game = function(id, gameInfo, sockets){
     console.log("setting up game");
     this.gameId    = id;
+    this.randomId  = Math.random() * 100;
     this.gameInfo  = gameInfo;
     this.sockets   = sockets;
     this.players   = {};
@@ -51,6 +52,7 @@
     this.intervals.push(setInterval(this.gameUpdate.bind(this), gameUpdateTime));
     this.intervals.push(setInterval(this.updateTimers.bind(this), 4));
     this.intervals.push(setInterval(this.saveGame.bind(this), saveGameTime));
+    console.log("set up", this.intervals);
 
     // setup the players
     for (i = 0; i < this.gameInfo.players.length; i++){
@@ -159,6 +161,9 @@
 
   // cleans up a game before delation
   _ptype.destroy = function(cb){
+    for (var i = 0; i < this.intervals.length; i++){
+      clearInterval(this.intervals[i]);
+    }
     this.intervals.splice(0);
     this.saveGame(cb);
   };

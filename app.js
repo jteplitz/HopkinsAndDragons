@@ -101,9 +101,13 @@
 
     sockets.on("connection", function(err, client, session){
       var game =  null;
+      client.on("ping", function(data){
+        client.emit("ping", data);
+      });
       client.on("join", function(data){
         game = gameServer.joinGame(client, session.user, data, function(err, joinedGame){
           if (err){ return client.emit("error", err); }
+          console.log("joined game", joinedGame.randomId);
           game = joinedGame;
           setupNewClient(game, client);
         });
@@ -112,9 +116,6 @@
  });
   setupNewClient = function(game, client){
     console.log("setting up", client.user._id);
-    client.on("ping", function(data){
-      client.emit("ping", data);
-    });
     client.on("input", function(data){
       if (fakeLag > 0){
         setTimeout(function(){ game.handleInput(data, client) }, fakeLag);
