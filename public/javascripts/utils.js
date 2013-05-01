@@ -55,6 +55,7 @@ var $        = ($ instanceof Object) ? $ : {};
       dragons.globals.netOffset = parseInt(dragons.globals.netOffset, 10);
       dragons.globals.bufferSize = parseInt(dragons.globals.bufferSize, 10);
       dragons.globals.clientSmooth = parseInt(dragons.globals.clientSmooth, 10);
+      dragons.globals.saveGameTime = parseInt(dragons.globals.saveGameTime, 10);
     }
   };
   if (isServer){

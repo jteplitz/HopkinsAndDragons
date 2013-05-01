@@ -7,12 +7,11 @@
       gameServer, _ptype;
 
   gameServer = function(conf, schemas, sockets){
-    this.conf    = conf;
-    this.schemas = schemas;
-    this.sockets = sockets;
+    this.conf     = conf;
+    this.schemas  = schemas;
+    this.sockets  = sockets;
 
     this.games = {};
-    this.gameCount = 0;
   };
 
   _ptype = gameServer.prototype;

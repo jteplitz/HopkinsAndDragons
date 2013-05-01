@@ -31,7 +31,7 @@
 
     $("#observe").click(function(){ observer = !observer});
 
-    socket = io.connect(window.location.url);
+    socket = io.connect(window.location.protocol + "//" + window.location.host);
 
     socket.on("connect", function(){
       // attempt to join the game
