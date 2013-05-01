@@ -47,6 +47,7 @@
     }
 
     this.canvas = new dragons.canvas({width: mapSize.width, height: mapSize.height}, conf);
+    canvas.organizedMap = dragons.utils.buildMap(gameInfo.map); // organize the map object for easier access
 
     this.intervals.push(setInterval(this.physicsUpdate.bind(this), physicsUpdateTime));
     this.intervals.push(setInterval(this.gameUpdate.bind(this), gameUpdateTime));

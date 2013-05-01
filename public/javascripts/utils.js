@@ -34,6 +34,9 @@ var $        = ($ instanceof Object) ? $ : {};
     },
 
     buildMap: function(map){
+      if (!_.has(dragons, "organizedMap")){
+        dragons.organizedMap = {};
+      }
       for (var i = 0; i < map.length; i++){
         var mapPiece = map[i];
         if (!_.has(dragons.organizedMap, mapPiece.x)){
@@ -42,6 +45,7 @@ var $        = ($ instanceof Object) ? $ : {};
 
         dragons.organizedMap[mapPiece.x][mapPiece.y] = mapPiece;
       }
+      return dragons.organizedMap;
     },
 
     // ensures that globals are of the proper type
