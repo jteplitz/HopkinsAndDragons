@@ -46,8 +46,17 @@
       }
     }
 
-    this.canvas = new dragons.canvas({width: mapSize.width, height: mapSize.height}, conf);
-    canvas.organizedMap = dragons.utils.buildMap(gameInfo.map); // organize the map object for easier access
+    this.canvas              = new dragons.canvas({width: mapSize.width, height: mapSize.height}, conf);
+    
+    //setup the map
+    var organizedMap = [];
+    for (i = 0; i < gameInfo.map.length; i++){
+      var piece = gameInfo.map[i].toObject();
+      piece.x = piece.x * 2;
+      piece.y = piece.y * 2;
+      organizedMap.push(piece);
+    }
+    this.canvas.setMap(dragons.utils.buildMap(organizedMap)); // organize the map object for easier access
 
     this.intervals.push(setInterval(this.physicsUpdate.bind(this), physicsUpdateTime));
     this.intervals.push(setInterval(this.gameUpdate.bind(this), gameUpdateTime));

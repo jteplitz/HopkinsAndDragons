@@ -265,6 +265,7 @@
       canvas.addElement(piece);
       mapPieces.push(piece);
       dragons.utils.buildMap(mapPieces); // organize the map object for easier editing access
+      canvas.setMap(dragons.organizedMap);
       return piece;
     };
   };
