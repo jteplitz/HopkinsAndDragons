@@ -25,11 +25,12 @@ var $        = ($ instanceof Object) ? $ : {};
       canvasHeight       = canvas.height;
     }
     this.elements      = [];
+    this.organizedMap  = {};
 
 
     this.update = function(){
       for (var i = 0; i < this.elements.length; i++){
-        this.elements[i].update();
+        this.elements[i].update(this);
       }
     };
 
@@ -50,6 +51,10 @@ var $        = ($ instanceof Object) ? $ : {};
           this.elements.push(element);
         }
       }
+    };
+
+    this.setMap = function(organizedMap){
+      this.organizedMap = organizedMap;
     };
   };
 
@@ -117,7 +122,7 @@ var $        = ($ instanceof Object) ? $ : {};
       this.lastRecievedInput = 0;
       this.lastHandledInput  = 0;
 
-      this.update = function(){
+      this.update = function(canvas){
         var dx = 0, dy = 0;
         
         for (var i = 0; i < this.inputs.length; i++){
@@ -164,14 +169,14 @@ var $        = ($ instanceof Object) ? $ : {};
       pieceY        = Math.floor(possibleY / roomHeight) * roomHeight;
 
       if (possibleX % roomWidth <= wallWidth &&
-        _.has(dragons.organizedMap, pieceX) && _.has(dragons.organizedMap[pieceX], pieceY) &&
-        !dragons.organizedMap[pieceX][pieceY].doorLeft){
+        _.has(canvas.organizedMap, pieceX) && _.has(canvas.organizedMap[pieceX], pieceY) &&
+        !canvas.organizedMap[pieceX][pieceY].doorLeft){
         // left wall collision
         // place it right at the edge of the wall
         this.x = pieceX + wallWidth;
       } else if ((possibleX + this.width) % roomWidth >= roomWidth - wallWidth &&
-               _.has(dragons.organizedMap, pieceX) && _.has(dragons.organizedMap[pieceX], pieceY) &&
-               !dragons.organizedMap[pieceX][pieceY].doorRight){
+               _.has(canvas.organizedMap, pieceX) && _.has(canvas.organizedMap[pieceX], pieceY) &&
+               !canvas.organizedMap[pieceX][pieceY].doorRight){
         // right wall collision
         // place it right at the edge of the wall
         this.x = pieceX + roomWidth - wallWidth - this.width;
@@ -181,14 +186,14 @@ var $        = ($ instanceof Object) ? $ : {};
       }
 
       if (possibleY % roomHeight <= wallHeight &&
-        _.has(dragons.organizedMap, pieceX) && _.has(dragons.organizedMap[pieceX], pieceY) &&
-        !dragons.organizedMap[pieceX][pieceY].doorTop){
+        _.has(canvas.organizedMap, pieceX) && _.has(canvas.organizedMap[pieceX], pieceY) &&
+        !canvas.organizedMap[pieceX][pieceY].doorTop){
         // top wall collision
         // place it right at the edge of the wall
         this.y = pieceY + wallHeight;
       } else if ((possibleY + this.height) % roomHeight >= roomHeight - wallHeight &&
-                  _.has(dragons.organizedMap, pieceX) && _.has(dragons.organizedMap[pieceX], pieceY) &&
-                  !dragons.organizedMap[pieceX][pieceY].doorBottom){
+                  _.has(canvas.organizedMap, pieceX) && _.has(canvas.organizedMap[pieceX], pieceY) &&
+                  !canvas.organizedMap[pieceX][pieceY].doorBottom){
         // bottom wall collision
         // place it right at the edge of the wall
         this.y = pieceY + roomHeight - wallHeight - this.height;

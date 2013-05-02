@@ -37,6 +37,7 @@ var $        = ($ instanceof Object) ? $ : {};
       if (!_.has(dragons, "organizedMap")){
         dragons.organizedMap = {};
       }
+      console.log("organizing pieces", map.length);
       for (var i = 0; i < map.length; i++){
         var mapPiece = map[i];
         if (!_.has(dragons.organizedMap, mapPiece.x)){
@@ -52,6 +53,8 @@ var $        = ($ instanceof Object) ? $ : {};
     cleanGlobals: function(){
       dragons.globals.map.roomWidth = parseInt(dragons.globals.map.roomWidth, 10);
       dragons.globals.map.roomHeight = parseInt(dragons.globals.map.roomHeight, 10);
+      dragons.globals.map.wallWidth  = parseInt(dragons.globals.map.wallWidth, 10);
+      dragons.globals.map.wallHeight = parseInt(dragons.globals.map.wallHeight, 10);
       dragons.globals.physicsUpdateTime = parseInt(dragons.globals.physicsUpdateTime, 10);
       dragons.globals.serverSyncTime = parseInt(dragons.globals.serverSyncTime, 10);
       dragons.globals.playerSpeeed = parseInt(dragons.globals.playerSpeeed, 10);
