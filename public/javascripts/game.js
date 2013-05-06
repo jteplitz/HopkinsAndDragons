@@ -10,14 +10,14 @@
       lerp, vLerp;
 
   // globals
-  var canvas, mapPieces = [], socket, players = {}, yourGuy, keyboard, observer = false,
+  var canvas, mapPieces = [], socket, players = {}, yourGuy = null, keyboard, observer = false,
       playersLoading = 0, active = false,
       // physics globals
       pdt = 0.001, pdte = new Date().getTime(),
       // network globals
       netLatency = 0.001, netPing = 0.001, lastPingTime, serverTime = 0, clientTime = 0, localTime, dt, dte,
       lastLocalTime = 0,
-      serverUpdates = [],
+      serverUpdates = [], lastInputNum = null,
       updateTimes  = [];
 
   dragons.organizedMap = {};
@@ -44,8 +44,12 @@
     socket.on("start", function(data){
       localTime = data.time + netLatency;
       var inputNum = data.inputNums[dragons.your_id];
-      yourGuy.lastRecievedInput = inputNum;
-      yourGuy.lastHandledInput  = inputNum;
+      if (!_.isNull(yourGuy)){
+        yourGuy.lastRecievedInput = inputNum;
+        yourGuy.lastHandledInput  = inputNum;
+      } else {
+        lastInputNum = inputNum;
+      }
 
       active = true;
     });
@@ -175,6 +179,10 @@
 
       if (player._id === dragons.your_id){
         yourGuy = player;
+      }
+      if (!_.isNull(lastInputNum)){
+        yourGuy.lastRecievedInput = lastInputNum;
+        yourGuy.lastHandledInput  = lastInputNum;
       }
       if (playersLoading === 0){
         startGame();

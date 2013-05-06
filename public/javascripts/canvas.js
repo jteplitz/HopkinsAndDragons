@@ -1,7 +1,8 @@
 var isServer = (typeof _ === "undefined");
 var dragons  = (dragons instanceof Object) ? dragons : {};
 var _        = (_ instanceof Object)       ? _       : require("underscore");
-var $        = ($ instanceof Object) ? $ : {};
+var $        = ($ instanceof Object) ? $ : {},
+checkForWall;
 
 (function(){
   "use strict";
@@ -166,43 +167,84 @@ var $        = ($ instanceof Object) ? $ : {};
       wallWidth     = dragons.globals.map.wallWidth * 2,
       wallHeight    = dragons.globals.map.wallHeight * 2,
       pieceX        = Math.floor(possibleX / roomWidth) * roomWidth,
-      pieceY        = Math.floor(possibleY / roomHeight) * roomHeight;
+      pieceY        = Math.floor(possibleY / roomHeight) * roomHeight,
+      finalX, finalY;
 
-      if (possibleX % roomWidth <= wallWidth &&
-        _.has(canvas.organizedMap, pieceX) && _.has(canvas.organizedMap[pieceX], pieceY) &&
-        !canvas.organizedMap[pieceX][pieceY].doorLeft){
+
+      var currentCollision = this.checkForWallCollision(canvas, possibleX, possibleY, roomWidth, roomHeight, wallWidth, wallHeight,
+                                                        pieceX, pieceY);
+      finalX = currentCollision.x;
+      finalY = currentCollision.y;
+
+      if ((finalX === false || finalY === false) && (possibleX % roomWidth) + this.width >= roomWidth){
+        // they are overflowing onto a piece to the right
+        currentCollision = this.checkForWallCollision(canvas, possibleX, possibleY, roomWidth, roomHeight, wallWidth, wallHeight,
+                                                      pieceX + roomWidth, pieceY);
+        finalX = (finalX) ? finalX : currentCollision.x;
+        finalY = (finalY) ? finalY : currentCollision.y;
+      }
+      if ((finalX === false || finalY === false) && (possibleY % roomHeight) + this.height >= roomHeight){
+        // they are overflowing onto a piece below
+        currentCollision = this.checkForWallCollision(canvas, possibleX, possibleY, roomWidth, roomHeight, wallWidth, wallHeight,
+                                                      pieceX, pieceY + roomHeight);
+        finalX = (finalX) ? finalX : currentCollision.x;
+        finalY = (finalY) ? finalY : currentCollision.y;
+      }
+
+      if (finalX === false){
+        this.x = possibleX;
+      } else {
+        this.x = finalX;
+      }
+
+      if (finalY === false){
+        this.y = possibleY;
+      } else {
+        this.y = finalY;
+      }
+
+    };
+
+    this.checkForWallCollision = function(canvas, possibleX, possibleY, roomWidth, roomHeight, wallWidth, wallHeight,
+                                          pieceX, pieceY){
+      var x, y;
+      if (possibleX % roomWidth <= wallWidth && checkForWall(canvas.organizedMap, pieceX, pieceY, "doorLeft")){
         // left wall collision
         // place it right at the edge of the wall
-        this.x = pieceX + wallWidth;
+        x = pieceX + wallWidth;
       } else if ((possibleX + this.width) % roomWidth >= roomWidth - wallWidth &&
-               _.has(canvas.organizedMap, pieceX) && _.has(canvas.organizedMap[pieceX], pieceY) &&
-               !canvas.organizedMap[pieceX][pieceY].doorRight){
+                 checkForWall(canvas.organizedMap, pieceX, pieceY, "doorRight")){
         // right wall collision
         // place it right at the edge of the wall
-        this.x = pieceX + roomWidth - wallWidth - this.width;
+        x = pieceX + roomWidth - wallWidth - this.width;
       } else {
         // not on a wall
-        this.x = possibleX;
+        x = false;
       }
 
-      if (possibleY % roomHeight <= wallHeight &&
-        _.has(canvas.organizedMap, pieceX) && _.has(canvas.organizedMap[pieceX], pieceY) &&
-        !canvas.organizedMap[pieceX][pieceY].doorTop){
+      if (possibleY % roomHeight <= wallHeight && checkForWall(canvas.organizedMap, pieceX, pieceY, "doorTop")){
         // top wall collision
         // place it right at the edge of the wall
-        this.y = pieceY + wallHeight;
+        y = pieceY + wallHeight;
       } else if ((possibleY + this.height) % roomHeight >= roomHeight - wallHeight &&
-                  _.has(canvas.organizedMap, pieceX) && _.has(canvas.organizedMap[pieceX], pieceY) &&
-                  !canvas.organizedMap[pieceX][pieceY].doorBottom){
+                  checkForWall(canvas.organizedMap, pieceX, pieceY, "doorBottom")){
         // bottom wall collision
         // place it right at the edge of the wall
-        this.y = pieceY + roomHeight - wallHeight - this.height;
+        y = pieceY + roomHeight - wallHeight - this.height;
       } else {
         // not on a wall
-        this.y = possibleY;
+        y = false;
       }
+
+      return {x: x, y: y};
     };
   }
+};
+
+
+checkForWall = function(organizedMap, x, y, direction){
+  return (_.has(organizedMap, x) && _.has(organizedMap[x], y) &&
+               !organizedMap[x][y][direction]);
 };
 
 dragons.RoomElement = function(image, width, height, x, y, rotate, doorLeft, doorRight, doorTop, doorBottom, id){
