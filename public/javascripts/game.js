@@ -10,7 +10,7 @@
       lerp, vLerp;
 
   // globals
-  var canvas, mapPieces = [], socket, players = {}, yourGuy = null, keyboard, observer = false,
+  var canvas, canvasContainer = {}, mapPieces = [], socket, players = {}, yourGuy = null, keyboard, observer = false,
       playersLoading = 0, active = false,
       // physics globals
       pdt = 0.001, pdte = new Date().getTime(),
@@ -26,6 +26,12 @@
     setInterval(ping, 1000); // begin tracking ping immediatly
 
     canvas = new dragons.canvas($("#map")[0]);
+    canvasContainer = {
+      width: $("#map").parent().width(),
+      height: $("#map").parent().height(),
+      scrollLeft: $("#map").parent().scrollLeft(),
+      scrollTop: $("#map").parent().scrollTop()
+    };
     restoreMap();
     keyboard = new THREEx.KeyboardState();
 
@@ -238,6 +244,30 @@
     handleInput();
     processServerUpdates();
     canvas.draw();
+
+    if (yourGuy.x + 200 >= canvasContainer.width + canvasContainer.scrollLeft){
+      canvasContainer.scrollLeft += 200;
+      $("#map").parent().animate({scrollLeft: canvasContainer.scrollLeft}, 200);
+    } else if (yourGuy.x - 200 <= canvasContainer.scrollLeft){
+      if (canvasContainer.scrollLeft - 200 < 0){
+        canvasContainer.scrollLeft = 0;
+      } else {
+        canvasContainer.scrollLeft -= 200;
+      }
+      $("#map").parent().animate({scrollLeft: canvasContainer.scrollLeft}, 200);
+    }
+
+    if (yourGuy.y + 200 >= canvasContainer.width + canvasContainer.scrollTop){
+      canvasContainer.scrollTop += 200;
+      $("#map").parent().animate({scrollTop: canvasContainer.scrollTop}, 200);
+    } else if (yourGuy.y - 200 <= canvasContainer.scrollTop){
+      if (canvasContainer.scrollTop - 200 < 0){
+        canvasContainer.scrollTop = 0;
+      } else {
+        canvasContainer.scrollTop -= 200;
+      }
+      $("#map").parent().animate({scrollTop: canvasContainer.scrollTop}, 200);
+    }
     //sync();
     window.requestAnimationFrame( main.bind(this), $("#map")[0]);
   };
