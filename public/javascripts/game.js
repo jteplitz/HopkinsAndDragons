@@ -1,16 +1,17 @@
-/*globals dragons _ io THREEx*/ (function(){
+/*globals dragons _ io THREEx*/
+(function(){
   "use strict";
 
   // functions
   var restoreMap, addPiece, addEnemy, main, sync, handleKeyDown, handleKeyUp, startGame,
-      setupPlayers, setupPlayer,
+      setupPlayers, setupPlayer, scrollMap, handleFog,
       updatePhysics, handleInput, createMovementVector, ping, handlePing,
       handleServerUpdate, updateTimers, processServerUpdates, handleServerError,
       updateFrameRate,
       lerp, vLerp;
 
   // globals
-  var canvas, canvasContainer = {}, mapPieces = [], socket, players = {}, yourGuy = null, keyboard, observer = false,
+  var canvas, fogCanvas, canvasContainer = {}, mapInfo = {}, mapPieces = [], socket, players = {}, yourGuy = null, keyboard, observer = false,
       playersLoading = 0, active = false,
       // physics globals
       pdt = 0.001, pdte = new Date().getTime(),
@@ -26,6 +27,14 @@
     setInterval(ping, 1000); // begin tracking ping immediatly
 
     canvas = new dragons.canvas($("#map")[0]);
+    mapInfo = {
+      width: $("#map").width(),
+      height: $("#map").height()
+    };
+    fogCanvas = $("<canvas id='fogCanvas' width='" + mapInfo.width + "' height='" + mapInfo.height + "'></canvas>");
+    $("#canvasContainer").append(fogCanvas);
+    fogCanvas = new dragons.fogCanvas(fogCanvas[0], mapInfo.width, mapInfo.height);
+
     canvasContainer = {
       width: $("#map").parent().width(),
       height: $("#map").parent().height(),
@@ -243,8 +252,19 @@
     }
     handleInput();
     processServerUpdates();
+    handleFog();
     canvas.draw();
+    scrollMap();
 
+    //sync();
+    window.requestAnimationFrame( main.bind(this), $("#map")[0]);
+  };
+
+  handleFog = function(){
+    fogCanvas.updateFog(yourGuy);
+  };
+
+  scrollMap = function(){
     if (yourGuy.x + 200 >= canvasContainer.width + canvasContainer.scrollLeft){
       canvasContainer.scrollLeft += 200;
       $("#map").parent().animate({scrollLeft: canvasContainer.scrollLeft}, 200);
@@ -268,8 +288,6 @@
       }
       $("#map").parent().animate({scrollTop: canvasContainer.scrollTop}, 200);
     }
-    //sync();
-    window.requestAnimationFrame( main.bind(this), $("#map")[0]);
   };
 
   // sends positions through the socket

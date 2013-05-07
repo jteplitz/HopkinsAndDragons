@@ -63,6 +63,7 @@ var $        = ($ instanceof Object) ? $ : {};
       dragons.globals.bufferSize = parseInt(dragons.globals.bufferSize, 10);
       dragons.globals.clientSmooth = parseInt(dragons.globals.clientSmooth, 10);
       dragons.globals.saveGameTime = parseInt(dragons.globals.saveGameTime, 10);
+      dragons.globals.playerSight  = parseInt(dragons.globals.playerSight, 10);
     }
   };
   if (isServer){

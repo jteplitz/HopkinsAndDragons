@@ -120,6 +120,7 @@ checkForWall;
 
       this.name = name;
       this.inputs = [];
+      this.movements = [];
       this.lastRecievedInput = 0;
       this.lastHandledInput  = 0;
 
@@ -158,7 +159,6 @@ checkForWall;
         this.lastHandledInput = this.inputs[this.inputs.length - 1].seq;
       }
       var movement = dragons.createMovementVector(dx, dy);
-
       // check for wall collisions
       var possibleX = this.x + movement.x,
       possibleY     = this.y + movement.y,
@@ -190,6 +190,7 @@ checkForWall;
         finalX = (finalX) ? finalX : currentCollision.x;
         finalY = (finalY) ? finalY : currentCollision.y;
       }
+      var oldX = this.x, oldY = this.y;
 
       if (finalX === false){
         this.x = possibleX;
@@ -203,6 +204,9 @@ checkForWall;
         this.y = finalY;
       }
 
+      if (this.y !== oldY || this.x !== oldX){
+        this.movements.push({x: this.x, y: this.y}); // save this movement for fog of war
+      }
     };
 
     this.checkForWallCollision = function(canvas, possibleX, possibleY, roomWidth, roomHeight, wallWidth, wallHeight,
