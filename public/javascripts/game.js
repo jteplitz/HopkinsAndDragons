@@ -36,10 +36,10 @@
     fogCanvas = new dragons.fogCanvas(fogCanvas[0], mapInfo.width, mapInfo.height);
 
     canvasContainer = {
-      width: $("#map").parent().width(),
-      height: $("#map").parent().height(),
-      scrollLeft: $("#map").parent().scrollLeft(),
-      scrollTop: $("#map").parent().scrollTop()
+      width: $("#canvasContainer").width(),
+      height: $("#canvasContainer").height(),
+      scrollLeft: $("#canvasContainer").scrollLeft(),
+      scrollTop: $("#canvasContainer").scrollTop()
     };
     restoreMap();
     keyboard = new THREEx.KeyboardState();
@@ -194,6 +194,9 @@
       playersLoading--;
       canvas.addElement(player);
       players[playerInfo._id] = canvas.elements[canvas.elements.length - 1];
+      if (_.has(playerInfo, "movements")){
+        player.movements = playerInfo.movements;
+      }
 
       if (player._id === dragons.your_id){
         yourGuy = player;
@@ -274,26 +277,26 @@
   scrollMap = function(){
     if (yourGuy.x + 200 >= canvasContainer.width + canvasContainer.scrollLeft){
       canvasContainer.scrollLeft += 200;
-      $("#map").parent().animate({scrollLeft: canvasContainer.scrollLeft}, 200);
+      $("#canvasContainer").animate({scrollLeft: canvasContainer.scrollLeft}, 200);
     } else if (yourGuy.x - 200 <= canvasContainer.scrollLeft){
       if (canvasContainer.scrollLeft - 200 < 0){
         canvasContainer.scrollLeft = 0;
       } else {
         canvasContainer.scrollLeft -= 200;
       }
-      $("#map").parent().animate({scrollLeft: canvasContainer.scrollLeft}, 200);
+      $("#canvasContainer").animate({scrollLeft: canvasContainer.scrollLeft}, 200);
     }
 
-    if (yourGuy.y + 200 >= canvasContainer.width + canvasContainer.scrollTop){
-      canvasContainer.scrollTop += 200;
-      $("#map").parent().animate({scrollTop: canvasContainer.scrollTop}, 200);
-    } else if (yourGuy.y - 200 <= canvasContainer.scrollTop){
+    if (yourGuy.y + 200 >= canvasContainer.height + canvasContainer.scrollTop){
+      canvasContainer.scrollTop += 250;
+      $("#canvasContainer").animate({scrollTop: canvasContainer.scrollTop}, 200);
+    } else if (yourGuy.y - 200 < canvasContainer.scrollTop){
       if (canvasContainer.scrollTop - 200 < 0){
         canvasContainer.scrollTop = 0;
       } else {
         canvasContainer.scrollTop -= 200;
       }
-      $("#map").parent().animate({scrollTop: canvasContainer.scrollTop}, 200);
+      $("#canvasContainer").animate({scrollTop: canvasContainer.scrollTop}, 200);
     }
   };
 

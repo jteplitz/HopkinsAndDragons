@@ -16,7 +16,7 @@
       var dragons = require("../public/javascripts/canvas.js");
   
   Game = function(id, gameInfo, sockets){
-    console.log("setting up game");
+    console.log("setting up game", gameInfo.players);
     this.gameId    = id;
     this.randomId  = Math.random() * 100;
     this.gameInfo  = gameInfo;
@@ -46,7 +46,7 @@
       }
     }
 
-    this.canvas              = new dragons.canvas({width: mapSize.width, height: mapSize.height}, conf);
+    this.canvas = new dragons.canvas({width: mapSize.width, height: mapSize.height}, conf);
     
     //setup the map
     var organizedMap = [];
@@ -70,6 +70,7 @@
       var player = new dragons.gameElements.Player(null, 50, 50, currPlayer.x, currPlayer.y, currPlayer.name, currPlayer._id);
       this.canvas.addElement(player);
       this.players[currPlayer._id] = this.canvas.elements[this.canvas.elements.length - 1];
+      player.movements = this.gameInfo.players[i].movements;
     }
   };
 
@@ -121,7 +122,6 @@
     }
     this.clients.push(client);
     client.join(this.room);
-    client.emit("connected", {gameId: this.gameId, clientCount: this.clients.length});
     console.log("connected to", this.room);
 
 
@@ -162,6 +162,7 @@
       if (_.has(this.players, player._id)){
         player.x = this.players[player._id].x;
         player.y = this.players[player._id].y;
+        player.movements = this.players[player._id].movements;
         // TODO save level
       }
     }
@@ -169,7 +170,7 @@
     this.gameInfo.save(cb);
   };
 
-  // cleans up a game before delation
+  // cleans up a game before deletion
   _ptype.destroy = function(cb){
     for (var i = 0; i < this.intervals.length; i++){
       clearInterval(this.intervals[i]);
