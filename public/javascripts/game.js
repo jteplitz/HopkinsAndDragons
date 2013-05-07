@@ -259,8 +259,22 @@
     handleInput();
     processServerUpdates();
     handleFog();
+    var oldX = yourGuy.x, oldY = yourGuy.y;
     canvas.draw();
-    scrollMap();
+    scrollMap(yourGuy.movements);
+
+    /*if (yourGuy.movements.length > 0){
+      var x = "", y = "";
+      if (yourGuy.x > oldX){
+        x = "left";
+      } else if (yourGuy.x < oldX){
+        x = "right";
+      }
+
+      if (yourGuy.y > oldY){
+        y = "
+      }
+    }*/
 
     //sync();
     window.requestAnimationFrame( main.bind(this), $("#map")[0]);
@@ -274,11 +288,11 @@
     }
   };
 
-  scrollMap = function(){
-    if (yourGuy.x + 200 >= canvasContainer.width + canvasContainer.scrollLeft){
+  scrollMap = function(direction){
+    if (yourGuy.x + yourGuy.width >= canvasContainer.width + canvasContainer.scrollLeft){
       canvasContainer.scrollLeft += 200;
       $("#canvasContainer").animate({scrollLeft: canvasContainer.scrollLeft}, 200);
-    } else if (yourGuy.x - 200 <= canvasContainer.scrollLeft){
+    } else if (yourGuy.x <= canvasContainer.scrollLeft){
       if (canvasContainer.scrollLeft - 200 < 0){
         canvasContainer.scrollLeft = 0;
       } else {
@@ -287,10 +301,10 @@
       $("#canvasContainer").animate({scrollLeft: canvasContainer.scrollLeft}, 200);
     }
 
-    if (yourGuy.y + 200 >= canvasContainer.height + canvasContainer.scrollTop){
-      canvasContainer.scrollTop += 250;
+    if (yourGuy.y + yourGuy.height >= canvasContainer.height + canvasContainer.scrollTop){
+      canvasContainer.scrollTop += 200;
       $("#canvasContainer").animate({scrollTop: canvasContainer.scrollTop}, 200);
-    } else if (yourGuy.y - 200 < canvasContainer.scrollTop){
+    } else if (yourGuy.y < canvasContainer.scrollTop){
       if (canvasContainer.scrollTop - 200 < 0){
         canvasContainer.scrollTop = 0;
       } else {
