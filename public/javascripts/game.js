@@ -169,6 +169,9 @@
           
            var currentPosition = {x: players[player].x, y: players[player].y};
            var newPosition     = vLerp(currentPosition, target.pos[player], pdt * dragons.globals.clientSmooth);
+           if (players[player].x !== newPosition.x || players[player].y !== newPosition.y){
+             players[player].movements.push({x: newPosition.x, y: newPosition.y});
+           }
            players[player].x = newPosition.x;
            players[player].y = newPosition.y;
          }
@@ -261,7 +264,11 @@
   };
 
   handleFog = function(){
-    fogCanvas.updateFog(yourGuy);
+    for (var player in players){
+      if (players.hasOwnProperty(player)){
+        fogCanvas.updateFog(players[player]);
+      }
+    }
   };
 
   scrollMap = function(){
