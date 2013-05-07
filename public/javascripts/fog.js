@@ -11,8 +11,9 @@
     this.ctx.fillStyle = "rgba(0, 0, 0, 1)";
     this.ctx.fillRect(0, 0, width, height);
 
+    this.ctx.fillStyle = "rgba(200, 200, 200, 1)";
+
     this.updateFog = function(player){
-      this.ctx.fillStyle = "rgba(200, 200, 200, 1)";
       for (var i = 0; i < player.movements.length; i++){
         var movement  = player.movements[i];
         this.ctx.beginPath();
