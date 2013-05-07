@@ -78,7 +78,8 @@
     x: Number,
     y: Number,
     level: Number,
-    owner: Number
+    owner: Number,
+    movements: Mixed
   });
 
   var StoryPoint = new Schema({
