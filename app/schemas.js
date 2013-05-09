@@ -78,8 +78,7 @@
     x: Number,
     y: Number,
     level: Number,
-    owner: Number,
-    movements: [Mixed]
+    owner: Number
   });
 
   var StoryPoint = new Schema({
@@ -92,10 +91,10 @@
   var Game = new Schema({
     name: String,
     players: [Player],
-    owner: Number,
-    map: [MapPiece],
     enemies: [Enemy],
     story: [StoryPoint],
+    map: [MapPiece],
+    fog: String,
     backgroundStory: String,
     endStory: String
   });

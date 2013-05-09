@@ -6,6 +6,7 @@ block scripts
     dragons.players = !{JSON.stringify(game.players)};
     dragons.map     = !{JSON.stringify(game.map)};  
     dragons.your_id = !{JSON.stringify(your_id)};
+    dragons.fog     = !{JSON.stringify(game.fog || null)};
     dragons.gameId  = "!{game._id}";
 
   script(type="text/javascript", src="/javascripts/keyboard.js")

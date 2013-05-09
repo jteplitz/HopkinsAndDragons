@@ -33,7 +33,14 @@
     };
     fogCanvas = $("<canvas id='fogCanvas' width='" + mapInfo.width + "' height='" + mapInfo.height + "'></canvas>");
     $("#canvasContainer").append(fogCanvas);
-    fogCanvas = new dragons.fogCanvas(fogCanvas[0], mapInfo.width, mapInfo.height);
+    fogCanvas = new dragons.fogCanvas(fogCanvas[0], mapInfo.width, mapInfo.height, dragons.globals.playerSight);
+    if (!_.isUndefined(dragons.fog) && !_.isNull(dragons.fog)){
+      var saveImage = new Image();
+      saveImage.src = dragons.fog;
+      saveImage.onload = function(){
+        fogCanvas.loadFromSave(saveImage);
+      };
+    }
 
     canvasContainer = {
       width: $("#canvasContainer").width(),
@@ -194,9 +201,6 @@
       playersLoading--;
       canvas.addElement(player);
       players[playerInfo._id] = canvas.elements[canvas.elements.length - 1];
-      if (_.has(playerInfo, "movements")){
-        player.movements = playerInfo.movements;
-      }
 
       if (player._id === dragons.your_id){
         yourGuy = player;
