@@ -3,20 +3,22 @@
   "use strict";
 
   var _ = require("underscore"),
+      Canvas = require("canvas"),
       conf = require('nconf').argv().env().file({file: __dirname + '/../config.json'}),
 
-      Game, _ptype,
+      Game, _ptype, organizeMovements,
 
       // physics stuff
       physicsUpdateTime = conf.get("gameGlobals:physicsUpdateTime"),
       gameUpdateTime    = conf.get("gameGlobals:serverSyncTime"),
+      playerSight       = parseInt(conf.get("gameGlobals:playerSight"), 10),
       saveGameTime      = conf.get("gameGlobals:saveGameTime");
 
       // load the game classes
-      var dragons = require("../public/javascripts/canvas.js");
+      var dragons = require("../public/javascripts/canvas.js"),
+          fog     = require("../public/javascripts/fog.js");
   
   Game = function(id, gameInfo, sockets){
-    console.log("setting up game", gameInfo.players);
     this.gameId    = id;
     this.randomId  = Math.random() * 100;
     this.gameInfo  = gameInfo;
@@ -34,6 +36,7 @@
       height: 1000,
       width: 1600
     };
+    console.log("map", gameInfo);
     // get the map size
     for (var i = 0; i < gameInfo.map.length; i++){
       var mapPiece = gameInfo.map[i];
@@ -47,6 +50,14 @@
     }
 
     this.canvas = new dragons.canvas({width: mapSize.width, height: mapSize.height}, conf);
+    this.fogCanvas = new Canvas(mapSize.width, mapSize.height);
+    this.fogCanvas = new fog.fogCanvas(this.fogCanvas, mapSize.width, mapSize.height,
+                                       playerSight);
+    if (_.has(gameInfo, "fog")){
+      var saveImage = new Image();
+      saveImage.src = gameInfo.fog;
+      this.fogCanvas.loadFromSave(saveImage);
+    }
     
     //setup the map
     var organizedMap = [];
@@ -70,7 +81,6 @@
       var player = new dragons.gameElements.Player(null, 50, 50, currPlayer.x, currPlayer.y, currPlayer.name, currPlayer._id);
       this.canvas.addElement(player);
       this.players[currPlayer._id] = this.canvas.elements[this.canvas.elements.length - 1];
-      player.movements = this.gameInfo.players[i].movements;
     }
   };
 
@@ -88,6 +98,12 @@
 
   _ptype.physicsUpdate = function(){
     this.canvas.update();
+
+    for (var player in this.players){
+      if (this.players.hasOwnProperty(player)){
+        this.fogCanvas.updateFog(this.players[player]);
+      }
+    }
   };
 
   _ptype.gameUpdate = function(){
@@ -162,12 +178,13 @@
       if (_.has(this.players, player._id)){
         player.x = this.players[player._id].x;
         player.y = this.players[player._id].y;
-        player.movements = this.players[player._id].movements;
         // TODO save level
       }
     }
+    this.gameInfo.fog = this.fogCanvas.outputPng();
 
     this.gameInfo.save(cb);
+    console.log("saved game");
   };
 
   // cleans up a game before deletion
