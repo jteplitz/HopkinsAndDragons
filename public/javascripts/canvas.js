@@ -120,6 +120,7 @@ checkForWall;
 
       this.name = name;
       this.inputs = [];
+      this.attacks = [];
       this.movements = [];
       this.lastRecievedInput = 0;
       this.lastHandledInput  = 0;

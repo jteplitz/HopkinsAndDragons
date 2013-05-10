@@ -123,6 +123,9 @@
         game.handleInput(data, client);
       }
     });
+    client.on("equip", function(data){
+      game.handleEquip(data, client);
+    });
     client.on("disconnect", function(){
       console.log("got disconnect");
       gameServer.leaveGame(game, client);

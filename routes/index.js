@@ -29,7 +29,7 @@
     ["/game/:id/edit/enemies",  Routes.EditGameEnemies,   1, 0, 1,    ["get", "post", "put", "delete"]],
     ["/game/:id/edit/story",    Routes.EditGameStory,     1, 0, 1,    ["get",         "put", "delete"]],
     ["/game/:id/edit/players",  Routes.EditGamePlayers,   1, 1, 1,    ["get", "post"                 ]],
-    ["/game/:id",               Routes.Game,              1, 0, 1,    ["get"                         ]],
+    ["/game/:id",               Routes.Game,              1, 1, 1,    ["get"                         ]],
     ["/admin/map",              Routes.AdminMap,          1, 1, 2,    ["get", "post"                 ]],
     ["/admin/enemy/:id?",       Routes.AdminEnemy,        1, 1, 2,    ["get", "post"                 ]],
     ["/admin/enemies",          Routes.AdminEnemies,      1, 1, 2,    ["get"                         ]]

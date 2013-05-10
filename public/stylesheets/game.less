@@ -11,9 +11,47 @@
   right: 0;
 }
 
+#playerBar{
+  border-top: 1px solid white;
+  background-color: black;
+  width: 100%;
+  
+  .name{
+    color: white;
+    float: left;
+    font-size: 18pt;
+    margin-right: 10px;
+    margin-top: 10px;
+  }
+
+  .health{
+    color: red;
+    float: left;
+    font-size: 15pt;
+  }
+
+  .attacks{
+    .attack{
+      float: left;
+      width: 40px;
+      height: 40px;
+      border: 1px solid white;
+    }
+  }
+}
+
 #map, #fogCanvas{
   position: absolute;
   left: 0;
   right: 0;
 }
 
+#attacks{
+  .attack{
+    margin-right: 5px;
+  }
+}
+
+.attack.dragging{
+  position: absolute;
+}

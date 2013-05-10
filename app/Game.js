@@ -36,7 +36,6 @@
       height: 1000,
       width: 1600
     };
-    console.log("map", gameInfo);
     // get the map size
     for (var i = 0; i < gameInfo.map.length; i++){
       var mapPiece = gameInfo.map[i];
@@ -53,10 +52,15 @@
     this.fogCanvas = new Canvas(mapSize.width, mapSize.height);
     this.fogCanvas = new fog.fogCanvas(this.fogCanvas, mapSize.width, mapSize.height,
                                        playerSight);
-    if (_.has(gameInfo, "fog")){
-      var saveImage = new Image();
-      saveImage.src = gameInfo.fog;
+    if (!_.isUndefined(gameInfo.fog)){
+      var saveImage = new Canvas.Image();
+      var fogArray = gameInfo.fog.split(",");
+      saveImage.src = new Buffer(fogArray[fogArray.length - 1], "base64");
       this.fogCanvas.loadFromSave(saveImage);
+      saveImage.onload = function(){
+        console.log("loaded image", saveImage);
+        this.fogCanvas.loadFromSave(saveImage);
+      };
     }
     
     //setup the map
@@ -81,6 +85,7 @@
       var player = new dragons.gameElements.Player(null, 50, 50, currPlayer.x, currPlayer.y, currPlayer.name, currPlayer._id);
       this.canvas.addElement(player);
       this.players[currPlayer._id] = this.canvas.elements[this.canvas.elements.length - 1];
+      this.players[currPlayer._id].attacks = currPlayer.attacks;
     }
   };
 
@@ -170,6 +175,19 @@
     });
   };
 
+  _ptype.handleEquip = function(data, client){
+    if (client.player_id === null){ return }
+
+    var player = this.players[client.player_id];
+    if (_.has(data, "attack1")){
+      player.attacks[0] = data.attack1;
+    }
+
+    if (_.has(data, "attack2")){
+      player.attacks[1] = data.attack2;
+    }
+  };
+
   // saves game state in db
   _ptype.saveGame = function(cb){
     // update positions
@@ -178,13 +196,14 @@
       if (_.has(this.players, player._id)){
         player.x = this.players[player._id].x;
         player.y = this.players[player._id].y;
+        player.attacks = this.players[player._id].attacks;
         // TODO save level
       }
     }
     this.gameInfo.fog = this.fogCanvas.outputPng();
+    this.gameInfo.markModified("players");
 
     this.gameInfo.save(cb);
-    console.log("saved game");
   };
 
   // cleans up a game before deletion

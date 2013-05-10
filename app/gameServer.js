@@ -72,7 +72,7 @@
     game.removeClient(client);
     if (game.clients.length === 0){
       console.log("removing game", game.gameId);
-      this.games[game.gameId].destroy(function(){
+      this.games[game.gameId].destroy(function(err){
         delete self.games[game.gameId];
       });
     }

@@ -7,12 +7,14 @@ block scripts
     dragons.map     = !{JSON.stringify(game.map)};  
     dragons.your_id = !{JSON.stringify(your_id)};
     dragons.fog     = !{JSON.stringify(game.fog || null)};
+    dragons.attacks = !{JSON.stringify(attacks)};
     dragons.gameId  = "!{game._id}";
 
   script(type="text/javascript", src="/javascripts/keyboard.js")
   script(type="text/javascript", src="/javascripts/canvas.js")
   script(type="text/javascript", src="/socket.io/socket.io.js")
   script(type="text/javascript", src="/javascripts/fog.js")
+  script(type="text/javascript", src="/javascripts/combat.js")
   script(type="text/javascript", src="/javascripts/game.js")
 
 block styles
@@ -23,5 +25,21 @@ block content
     .span10
       #canvasContainer
         canvas#map(width="#{mapSize.width}px", height="#{mapSize.height}px")
+      #playerBar
+        .name 
+        .attacks
+          .attack1.attack
+          .attack2.attack
+        .clear
+      #attacks
+        h4 Attacks (Drag one onto slot to equip)
+        each attack,name in attacks
+          img.attack(src="#{attack.icon}", data-name="#{name}", width="40px", height="40px")
       #ping
       #frameRate
+  #combatModal.modal.hide.face(role="dialog", data-backdrop="static")
+    .modal-header
+      h3 Fight!
+
+    .modal-body
+    
