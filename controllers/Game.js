@@ -9,9 +9,10 @@
       GameCtrl, _ptype,
       getGame, addBaseInfo;
 
-  GameCtrl = function(schemas, user, gameId){
+  GameCtrl = function(schemas, user, conf, gameId){
     this.schemas  = schemas;
     this.gameId   = gameId;
+    this.conf     = conf;
     this.user     = user;
 
     this.payload = {title: "Play Game!"};
@@ -45,15 +46,20 @@
         }
       }
 
-      var playerId = "";
+      var playerId = "", attacks;
       // figure out which player we are
       for (i = 0; i < game.players.length; i++){
         if (game.players[i].owner === self.user._id){
           playerId = game.players[i]._id;
+          console.log("name", game.players[i].name);
+          attacks = self.conf.get("players:" + game.players[i].name + ":attacks");
+          break;
         }
       }
+      console.log("got attacks", attacks);
 
-      _.extend(data, {game: game, mapSize: mapSize, your_id: playerId});
+
+      _.extend(data, {game: game, mapSize: mapSize, your_id: playerId, attacks: attacks});
       cb();
     });
   };

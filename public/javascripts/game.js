@@ -7,12 +7,15 @@
       setupPlayers, setupPlayer, scrollMap, handleFog,
       updatePhysics, handleInput, createMovementVector, ping, handlePing,
       handleServerUpdate, updateTimers, processServerUpdates, handleServerError,
+      startDraggingAttack, dragAttack, stopDraggingAttack,
+      checkForCombat,
       updateFrameRate,
       lerp, vLerp;
 
   // globals
-  var canvas, fogCanvas, canvasContainer = {}, mapInfo = {}, mapPieces = [], socket, players = {}, yourGuy = null, keyboard, observer = false,
+  var canvas, fogCanvas, canvasContainer = {}, mapInfo = {}, mapPieces = [], socket, players = {}, yourGuy = null, keyboard, observer = false, enemies = [],
       playersLoading = 0, active = false,
+      draggingAttack = false,
       // physics globals
       pdt = 0.001, pdte = new Date().getTime(),
       // network globals
@@ -51,7 +54,10 @@
     restoreMap();
     keyboard = new THREEx.KeyboardState();
 
-    $("#observe").click(function(){ observer = !observer});
+    $(document).on("mousemove", dragAttack);
+    $("#attacks .attack").on("mousedown", startDraggingAttack);
+    $("#attacks .attack").on("dragstart", function(e){ e.preventDefault() }); // prevent browser dragging from getting in the way
+    $(document).on("mouseup", ".dragging", stopDraggingAttack);
 
     socket = io.connect(window.location.protocol + "//" + window.location.host);
 
@@ -84,6 +90,73 @@
     setupPlayers();
   });
 
+  startDraggingAttack = function(e){
+    if (!draggingAttack){
+      draggingAttack = true;
+
+      var piece = $(this).clone();
+      piece.addClass("dragging");
+      piece.attr("data-startX", $(this).offset().left);
+      piece.attr("data-startY", $(this).offset().top);
+      $("body").append(piece);
+
+      dragAttack(e);
+    }
+  };
+
+  dragAttack = function(e){
+    if (draggingAttack){
+      $(".dragging").css("top", e.pageY + "px");
+      $(".dragging").css("left", e.pageX + "px");
+    }
+  };
+
+  stopDraggingAttack = function(e){
+    if (draggingAttack){
+      var dragging = $(".dragging");
+      if (dragons.utils.detectMouseOver($(".attack1"), e)){
+        yourGuy.attacks[0] = dragging.attr("data-name");
+        $(".attack1").html("<img src='" + dragging.attr("src") + "' width='40px' height='40px' />");
+        dragging.remove();
+        socket.emit("equip", {attack1: dragging.attr("data-name")});
+      } else if (dragons.utils.detectMouseOver($(".attack2"), e)){
+        yourGuy.attacks[1] = dragging.attr("data-name");
+        $(".attack2").html("<img src='" + dragging.attr("src") + "' width='40px' height='40px' />");
+        dragging.remove();
+        socket.emit("equip", {attack2: dragging.attr("data-name")});
+      } else {
+        dragging.animate({
+          left: dragging.attr("data-startX") + "px",
+          top: dragging.attr("data-startY") + "px"
+        }, {
+          duration: 200,
+          complete: function(){
+            $(this).remove();
+          }
+        });
+      }
+      draggingAttack = false;
+    }
+  };
+
+  checkForCombat = function(){
+    var combatEnemies = [];
+    for (var i = 0; i < enemies.length; i++){
+      if (enemies[i].x - enemies[i].pullRadius < yourGuy.x &&
+          enemies[i].x + enemies[i].pullRadius > yourGuy.x &&
+          enemies[i].y - enemies[i].pullRadius < yourGuy.y &&
+          enemies[i].y + enemies[i].pullRadius > yourGuy.y){
+        combatEnemies.push(enemies[i]);
+      }
+    }
+
+    if (combatEnemies.length > 0){
+      var combat = new dragons.combat();
+      active = false;
+      combat.start(combatEnemies);
+    }
+  };
+
   startGame = function(){
     setInterval(updatePhysics, dragons.globals.physicsUpdateTime);
 
@@ -101,6 +174,7 @@
     pdt = (new Date().getTime() - pdte)/1000.0;
     pdte = new Date().getTime();
     canvas.update();
+    checkForCombat();
   };
 
   handleServerUpdate = function(state){
@@ -198,12 +272,17 @@
   setupPlayer = function(image, playerInfo){
     return function(){
       var player = new dragons.gameElements.Player(image, 50, 50, playerInfo.x, playerInfo.y, playerInfo.name, playerInfo._id);
+      player.attacks = playerInfo.attacks;
       playersLoading--;
       canvas.addElement(player);
       players[playerInfo._id] = canvas.elements[canvas.elements.length - 1];
 
       if (player._id === dragons.your_id){
         yourGuy = player;
+        $("#playerBar .name").text(player.name);
+        for (var i = 0; i < ((player.attacks.length < 2) ? player.attacks.length : 2); i++){
+          $(".attack" + (i + 1)).html("<img src='" + dragons.attacks[player.attacks[i]].icon + "' width='40px' height='40px' + />");
+        }
       }
       if (!_.isNull(lastInputNum)){
         yourGuy.lastRecievedInput = lastInputNum;
@@ -360,6 +439,7 @@
       var enemy = new dragons.gameElements.Enemy(image, 50, 50, enemyData.x * 2, enemyData.y * 2, enemyData.pullRadius, enemyData._id);
       enemy.gameData = enemyData;
       canvas.addElement(enemy);
+      enemies.push(enemy);
       return enemy;
     };
   };

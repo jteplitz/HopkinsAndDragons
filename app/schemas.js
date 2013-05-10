@@ -75,6 +75,7 @@
   var Player = new Schema({
     name: String,
     image: String,
+    attacks: Mixed,
     x: Number,
     y: Number,
     level: Number,
