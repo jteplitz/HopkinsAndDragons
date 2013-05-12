@@ -38,9 +38,16 @@
 
   // TODO: game _id's should be monotonic numbers
   _ptype.createGame = function(gameData, cb){
+    console.log("saving game", this.user);
     var game = new this.schemas.Game({
       name: gameData.name,
       players: gameData.owners,
+      enemies: [],
+      story: [],
+      map: [],
+      fog: "",
+      backgroundStory: "",
+      endStory: "",
       owner: this.user._id
     });
 

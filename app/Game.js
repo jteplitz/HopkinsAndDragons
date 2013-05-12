@@ -6,7 +6,7 @@
       Canvas = require("canvas"),
       conf = require('nconf').argv().env().file({file: __dirname + '/../config.json'}),
 
-      Game, _ptype, organizeMovements,
+      Game, _ptype, organizeMovements, mergeCombats,
 
       // physics stuff
       physicsUpdateTime = conf.get("gameGlobals:physicsUpdateTime"),
@@ -16,6 +16,7 @@
 
       // load the game classes
       var dragons = require("../public/javascripts/canvas.js"),
+          combat  = require("../public/javascripts/combat.js"),
           fog     = require("../public/javascripts/fog.js");
   
   Game = function(id, gameInfo, sockets){
@@ -24,6 +25,7 @@
     this.gameInfo  = gameInfo;
     this.sockets   = sockets;
     this.players   = {};
+    this.enemies   = [];
     this.room      = "/game/" + id;
     this.clients   = [];
     this.intervals = [];
@@ -87,6 +89,14 @@
       this.players[currPlayer._id] = this.canvas.elements[this.canvas.elements.length - 1];
       this.players[currPlayer._id].attacks = currPlayer.attacks;
     }
+
+    // setup the enemies
+    for (i = 0; i < this.gameInfo.enemies.length; i++){
+      var currEnemy = this.gameInfo.enemies[i];
+      var enemy = new dragons.gameElements.Enemy(null, 50, 50, currEnemy.x * 2, currEnemy.y * 2, currEnemy.pullRadius, currEnemy._id);
+      enemy.gameData = currEnemy;
+      this.enemies.push(enemy);
+    }
   };
 
   _ptype = Game.prototype;
@@ -109,6 +119,72 @@
         this.fogCanvas.updateFog(this.players[player]);
       }
     }
+    this.checkForCombat();
+  };
+
+  _ptype.checkForCombat = function(){
+    var combats = [], i, j;
+    checkPlayer: for (var player in this.players){
+      if (this.players.hasOwnProperty(player)){
+      var combatIndex = null;
+      checkEnemy: for (i = 0; i < this.enemies.length; i++){
+          if (this.enemies[i].x - this.enemies[i].pullRadius < this.players[player].x &&
+              this.enemies[i].x + this.enemies[i].pullRadius > this.players[player].x &&
+              this.enemies[i].y - this.enemies[i].pullRadius < this.players[player].y &&
+              this.enemies[i].y + this.enemies[i].pullRadius > this.players[player].y){
+            // we're in this enemies pull radius
+            if (combatIndex === null){
+              for (j = 0; j < combats.length; j++){
+                // first enemyEncountered
+                if (_.has(combats[j].enemies, this.enemies[i])){
+                  combats[j].enemies.push(this.enemies[i]);
+                  combats[j].players.push(this.players[player]);
+                  combatIndex = j;
+                  break checkEnemy;
+                }
+              }
+              // this enemy is not in combat with anybody
+              combats.push({
+                players: [this.players[player]],
+                enemies: [this.enemies[i]]
+              });
+              combatIndex = combats.length - 1;
+            } else {
+              // we're already in combat so add this enemy to the combat
+              // make sure that this enemy isn't in combat somewhere else
+              for (j = 0; j < combats.length; j++){
+                if (_.has(combats[j].enemies, this.enemies[i])){
+                  // merge the combats
+                  combats = mergeCombats(combats, combatIndex, j);
+                  combatIndex = mergeCombats.length - 1;
+                  break;
+                }
+              }
+              combats[combatIndex].enemies.push(this.enemies[i]);
+            }
+          }
+        } // check enemy
+      }
+    } // check player
+  };
+
+  // merges the players and enemies of two combats, removes those combats from the array, and places the merged entry at the end
+  mergeCombats = function(combats, sourceNum, destNum){
+    var source = combats[source];
+    var dest   = combats[dest];
+    for (var i = 0; i < source.players.length; i++){
+      if (_.has(dest.players, source.players[i])){
+        dest.players.push(source.players[i]);
+      }
+    }
+    for (i = 0; i < source.enemies.length; i++){
+      if (_.has(dest.enemies, source.enemies[i])){
+        dest.enemies.push(source.enemies[i]);
+      }
+    }
+    combats.splice(sourceNum, 1);
+    combats.splice(destNum, 1);
+    combats.push(dest);
   };
 
   _ptype.gameUpdate = function(){

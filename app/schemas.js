@@ -97,7 +97,8 @@
     map: [MapPiece],
     fog: String,
     backgroundStory: String,
-    endStory: String
+    endStory: String,
+    owner: Number
   });
 
   exports.User         = mongoose.model("User", User);

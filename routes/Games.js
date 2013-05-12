@@ -25,7 +25,7 @@
         return next(500);
       }
 
-      res.redirect("/game/edit/" + game._id);
+      res.redirect("/game/" + game._id + "/edit/map");
     });
   };
   
