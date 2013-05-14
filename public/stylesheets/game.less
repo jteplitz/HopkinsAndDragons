@@ -30,13 +30,22 @@
     font-size: 15pt;
   }
 
-  .attacks{
-    .attack{
-      float: left;
-      width: 40px;
-      height: 40px;
-      border: 1px solid white;
-    }
+}
+
+.attacks_bar{
+  background-image: url(/img/attack_bar.png);
+  float: left;
+  width: 130px;
+  height: 48px;
+  .attack{
+    margin-left: 14px;
+    float: left;
+    width: 35px;
+    height: 35px;
+    margin-top: 6px;
+  }
+  .attack.attack1{
+    margin-left: 23px;
   }
 }
 
@@ -44,6 +53,61 @@
   position: absolute;
   left: 0;
   right: 0;
+}
+
+#combatModal{
+  .modal-body{
+  }
+  .players{
+    float: left;
+    width: 100px;
+  }
+
+  .enemies{
+    float: right;
+    width: 200px;
+  }
+
+  .controls{
+    
+    .player{
+      background-image: url(/img/health_bar.png);
+      width: 200px;
+      height: 64px;
+      float: left;
+      margin-left: 50px;
+      position: relative;
+
+      img.portrait{
+        margin-left: 15px;
+        margin-top: 5px;
+      }
+      .healthMeter{
+        position: absolute;
+        left: 72px;
+        top: 26px;
+        width: 104px;
+        background-image: url(/img/health.png);
+        margin-top: 2px;
+        height: 8px;
+      }
+    }
+
+    .attacks_bar{
+      float: left;
+      margin-left: 50px;
+      margin-top: 8px;
+    }
+
+    .attack.selected{
+      border: 1px solid green;
+      img{
+        width: 33px;
+        height: 33px;
+      }
+    }
+
+  }
 }
 
 #attacks{

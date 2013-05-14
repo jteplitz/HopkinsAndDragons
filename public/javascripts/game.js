@@ -3,17 +3,19 @@
   "use strict";
 
   // functions
-  var restoreMap, addPiece, addEnemy, main, sync, handleKeyDown, handleKeyUp, startGame,
+  var restoreMap, addPiece, addEnemy, main, handleKeyDown, handleKeyUp, startGame,
       setupPlayers, setupPlayer, scrollMap, handleFog,
       updatePhysics, handleInput, createMovementVector, ping, handlePing,
       handleServerUpdate, updateTimers, processServerUpdates, handleServerError,
       startDraggingAttack, dragAttack, stopDraggingAttack,
+      handleCombatStart, handleAttackSelect,
       checkForCombat,
       updateFrameRate,
       lerp, vLerp;
 
   // globals
-  var canvas, fogCanvas, canvasContainer = {}, mapInfo = {}, mapPieces = [], socket, players = {}, yourGuy = null, keyboard, observer = false, enemies = [],
+  var canvas, fogCanvas, canvasContainer = {}, mapInfo = {}, mapPieces = [], socket,
+      players = {}, yourGuy = null, keyboard, combatSession = null, enemies = [],
       playersLoading = 0, active = false,
       draggingAttack = false,
       // physics globals
@@ -59,6 +61,9 @@
     $("#attacks .attack").on("dragstart", function(e){ e.preventDefault() }); // prevent browser dragging from getting in the way
     $(document).on("mouseup", ".dragging", stopDraggingAttack);
 
+    // combat events
+    $("#combatModal .attack").on("click", handleAttackSelect);
+
     socket = io.connect(window.location.protocol + "//" + window.location.host);
 
     socket.on("connect", function(){
@@ -86,8 +91,14 @@
     socket.on("update", handleServerUpdate);
     socket.on("error", handleServerError);
 
+    // combat socket events
+    socket.on("combatStart", handleCombatStart);
+
     setInterval(updateTimers, 4);
     setupPlayers();
+
+    // ui stuff
+    $(".attack").tooltip();
   });
 
   startDraggingAttack = function(e){
@@ -116,12 +127,12 @@
       var dragging = $(".dragging");
       if (dragons.utils.detectMouseOver($(".attack1"), e)){
         yourGuy.attacks[0] = dragging.attr("data-name");
-        $(".attack1").html("<img src='" + dragging.attr("src") + "' width='40px' height='40px' />");
+        $("#playerBar .attack1").html("<img src='" + dragging.attr("src") + "' width='40px' height='40px' />");
         dragging.remove();
         socket.emit("equip", {attack1: dragging.attr("data-name")});
       } else if (dragons.utils.detectMouseOver($(".attack2"), e)){
         yourGuy.attacks[1] = dragging.attr("data-name");
-        $(".attack2").html("<img src='" + dragging.attr("src") + "' width='40px' height='40px' />");
+        $("#playerBar .attack2").html("<img src='" + dragging.attr("src") + "' width='40px' height='40px' />");
         dragging.remove();
         socket.emit("equip", {attack2: dragging.attr("data-name")});
       } else {
@@ -140,20 +151,26 @@
   };
 
   checkForCombat = function(){
-    var combatEnemies = [];
+    if (combatSession !== null){ return }
+
+    var combatEnemies = {}, fighting = false;
     for (var i = 0; i < enemies.length; i++){
       if (enemies[i].x - enemies[i].pullRadius < yourGuy.x &&
           enemies[i].x + enemies[i].pullRadius > yourGuy.x &&
           enemies[i].y - enemies[i].pullRadius < yourGuy.y &&
           enemies[i].y + enemies[i].pullRadius > yourGuy.y){
-        combatEnemies.push(enemies[i]);
+        combatEnemies[enemies[i]._id] = enemies[i];
+        fighting = true;
       }
     }
 
-    if (combatEnemies.length > 0){
-      var combat = new dragons.combat();
+    if (fighting){
+      var combatPlayers = {};
+      combatPlayers[yourGuy._id] = yourGuy;
+      var combat = new dragons.combat(combatEnemies, combatPlayers, yourGuy._id);
       active = false;
-      combat.start(combatEnemies);
+      combat.start();
+      combatSession = combat;
     }
   };
 
@@ -281,7 +298,7 @@
         yourGuy = player;
         $("#playerBar .name").text(player.name);
         for (var i = 0; i < ((player.attacks.length < 2) ? player.attacks.length : 2); i++){
-          $(".attack" + (i + 1)).html("<img src='" + dragons.attacks[player.attacks[i]].icon + "' width='40px' height='40px' + />");
+          $("#playerBar .attack" + (i + 1)).html("<img src='" + dragons.attacks[player.attacks[i]].icon + "' width='40px' height='40px' + />");
         }
       }
       if (!_.isNull(lastInputNum)){
@@ -363,6 +380,20 @@
     window.requestAnimationFrame( main.bind(this), $("#map")[0]);
   };
 
+  // combat
+  handleCombatStart = function(){
+    combatSession.start();
+  };
+
+  handleAttackSelect = function(e){
+    if (combatSession.state !== "attack"){ return } // only select the attack if that's the stage we're in
+
+    var attackNum = ($(this).hasClass("attack1")) ? 0 : 1;
+    $(this).addClass("selected");
+
+    socket.emit("attack", {num: attackNum}); // tell the server they selected this one
+  };
+
   handleFog = function(){
     for (var player in players){
       if (players.hasOwnProperty(player)){
@@ -394,13 +425,6 @@
         canvasContainer.scrollTop -= 200;
       }
       $("#canvasContainer").animate({scrollTop: canvasContainer.scrollTop}, 200);
-    }
-  };
-
-  // sends positions through the socket
-  sync = function(){
-    if (!observer){
-      //socket.emit("position", {dx: guy.dx, dy: guy.dy, x: guy.x, y: guy.y});
     }
   };
 

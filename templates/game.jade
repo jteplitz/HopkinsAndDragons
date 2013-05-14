@@ -27,14 +27,14 @@ block content
         canvas#map(width="#{mapSize.width}px", height="#{mapSize.height}px")
       #playerBar
         .name 
-        .attacks
+        .attacks_bar
           .attack1.attack
           .attack2.attack
         .clear
       #attacks
         h4 Attacks (Drag one onto slot to equip)
         each attack,name in attacks
-          img.attack(src="#{attack.icon}", data-name="#{name}", width="40px", height="40px")
+          img.attack(src="#{attack.icon}", data-name="#{name}", width="40px", height="40px", data-toggle="tooltip", title, data-original-title="#{name} <br /> Hit: #{attack.hit * 100}% <br /> Damage: #{attack.minDamage}-#{attack.maxDamage}", data-placement="right", data-html="true")
       #ping
       #frameRate
   #combatModal.modal.hide.face(role="dialog", data-backdrop="static")
@@ -42,4 +42,20 @@ block content
       h3 Fight!
 
     .modal-body
-    
+      .players
+      .enemies
+      
+      .clear
+
+       .messages
+      .controls
+        .player
+          img.portrait
+          .healthBar
+            .healthMeter
+        .attacks_bar
+          .attack1.attack
+          .attack2.attack
+      
+  audio#dungeonMusic(loop, autoplay)
+    source(src="https://s3.amazonaws.com/hopkins_dragons/cave_music.ogg", type="audio/ogg")

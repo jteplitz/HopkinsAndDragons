@@ -76,7 +76,6 @@
     var self = this;
     // append globals to conf data
     data.globals = JSON.stringify(conf.get("gameGlobals"));
-    console.log("globals", conf.get("gameGlobals"));
     this.prep( res, data, function( err, final_data ) {
       if (err){
         console.log("prep error", err);
@@ -86,7 +85,6 @@
         res.render("errors/500", _.extend(data, {status: 500, title: "500"}));
         return;
       }
-      console.log("rendering view", self.getView()._name);
       self.getView().render( res, final_data, cb );
     });
   };

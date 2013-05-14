@@ -124,6 +124,7 @@ checkForWall;
       this.movements = [];
       this.lastRecievedInput = 0;
       this.lastHandledInput  = 0;
+      this.inCombat          = false;
 
       this.update = function(canvas){
         var dx = 0, dy = 0;
