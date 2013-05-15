@@ -6,7 +6,7 @@ var $        = ($ instanceof Object) ? $ : {};
 (function(){
   "use strict";
 
-  var buildAttacks, pickAttack, randRange;
+  var buildAttacks, pickAttack, randRange, generatePlayerList;
 
   dragons.combat = function(enemies, players, yourID, conf){
     this.enemies = {};
@@ -36,6 +36,7 @@ var $        = ($ instanceof Object) ? $ : {};
       for (var player in this.players){
         if (this.players.hasOwnProperty(player)){
           var thisPlayer = this.players[player];
+          thisPlayer.health = 50;
           $("#combatModal .players").append("<div class='player'>" +
                                             "<img src='" + thisPlayer.image.src + "' />" +
                                             "</div>");
@@ -46,6 +47,7 @@ var $        = ($ instanceof Object) ? $ : {};
       for (var enemy in this.enemies){
         if (this.enemies.hasOwnProperty(enemy)){
           var thisEnemy = this.enemies[enemy];
+          thisEnemy.health = thisEnemy.gameData.baseObject.health;
           $("#combatModal .enemies").append("<div class='enemy' data-id='" + thisEnemy._id + "'" + " >" +
                                             "<img src='" + thisEnemy.image.image.src + "' />" +
                                             "</div>");
@@ -99,6 +101,7 @@ var $        = ($ instanceof Object) ? $ : {};
         if (this.playerAttacks.player === player){
           // repeat so replace
           this.playerAttacks[i] = {attack: dragons.attacks[this.players[player].attacks[attackNum]],
+                                   name: this.players[player][attackNum],
                                    target: target, player: player};
           add = false;
           break;
@@ -108,28 +111,74 @@ var $        = ($ instanceof Object) ? $ : {};
         // new attack so add it
         console.log("pushing", dragons.attacks[this.players[player].attacks[attackNum]]);
         this.playerAttacks.push({player: player, target: target,
+                                 name: this.players[player][attackNum],
                                  attack: dragons.attacks[this.players[player].attacks[attackNum]]});
       }
 
       if (isServer && this.playerAttacks.length === this.playerCount){
         // ready to fight
-        this.fight();
+        return this.fight();
+      } else {
+        return null;
       }
     };
 
     this.fight = function(){
+      var playerList = generatePlayerList(this.players), messages = [], i, damage;
       // simulate the enemy attacks
       for (var enemy in enemies){
         if (enemies.hasOwnProperty(enemy)){
           var theseAttacks = enemies[enemy].attacks;
           var attack = {};
           attack[enemies[enemy]._id] = pickAttack(theseAttacks);
-          var target = this.players[randRange(0, this.players.length - 1)];
-          this.enemyAttacks.push({attack: attack, target: target});
+          var target = playerList[randRange(0, playerList.length - 1)];
+          this.enemyAttacks.push({attack: attack, enemy: enemies[enemy], target: target});
         }
       }
 
       // process the attacks and come up with the results
+      
+      // players first
+      for (i = 0; i < this.playerAttacks.length; i++){
+        var castMsg = this.players[this.playerAttack.player].name + " casts " +
+                      this.playerAttacks[i].name + " at " +
+                      this.enemies[this.playerAttacks[i].target].gameData.baseEnemy.name;
+        // check for hit
+        if (Math.Random() < this.playerAttacks[i].hit){
+          // hit
+          damage = randRange(this.playerAttacks[i].attack.minDamage, this.playerAttacks[i].attack.maxDamage);
+          this.enemies[this.playerAttacks[i].enemy].health -= damage;
+          messages.push(castMsg + ". It hits dealing " + damage + " damage.");
+          if (this.enemies[this.playerAttacks[i].target].health <= 0){
+            messages.push("You have defeated " + this.enemeis[this.playerAttacks[i].target].gameData.baseEnemy.name + ".");
+            delete this.enemies[this.playerAttacks[i].target];
+          }
+        } else {
+          // not a hit
+          messages.push(castMsg + ". It misses.");
+        }
+      }
+
+      // now the enemies
+      for (i = 0; i < this.enemyAttacks.length; i++){
+        var thisAttack = this.enemyAttacks[i];
+        var enemyMsg = thisAttack.enemy.gameData.baseEnemy.name + " " +
+                      thisAttack.name + " " + this.players[thisAttack.target].name;
+        
+        // check for hit
+        if (Math.random() < (thisAttack.hitChance / 100)){
+          damage = randRange(this.playerAttacks[i].attack.minDamage, this.playerAttacks[i].attack.maxDamage);
+          this.players[thisAttack.target].health -= damage;
+          messages.push(enemyMsg + ". It hits dealing " + damage + " damage.");
+          if (this.players[thisAttack.target].health <= 0){
+            messages.push(this.players[thisAttack.target].name + " has been defeated.");
+          }
+        } else {
+          // not a hit
+          messages.push(enemyMsg + ". It misses.");
+        }
+      }
+      return messages;
     };
 
     this.addPlayer = function(player){
@@ -149,6 +198,16 @@ var $        = ($ instanceof Object) ? $ : {};
 
   randRange = function(min, max){
     return Math.floor(Math.random() * (max - min + 1)) + min;
+  };
+
+  generatePlayerList = function(players){
+    var list = [];
+    for (var player in players){
+      if (players.hasOwnProperty(player)){
+        list.push(player);
+      }
+    }
+    return list;
   };
 
   buildAttacks = function(players){

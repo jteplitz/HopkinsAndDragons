@@ -229,7 +229,7 @@
       $("#map")[0].width = ($("#map").width() + 200);
     }
     
-    if (mapPiece.y >= $("#map").height() + 150){
+    if (mapPiece.y >= $("#map").height() - 150){
       $("#map")[0].height = ($("#map").height() + 200);
     }
   };
