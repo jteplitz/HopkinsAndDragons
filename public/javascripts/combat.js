@@ -11,6 +11,7 @@ var $        = ($ instanceof Object) ? $ : {};
   dragons.combat = function(enemies, players, yourID, conf){
     this.enemies = {};
     this.players = {};
+    this.playerCount = 0;
 
     this.playerAttacks = [];
     this.enemyAttacks  = [];
@@ -18,6 +19,13 @@ var $        = ($ instanceof Object) ? $ : {};
     this.enemies = enemies;
     this.players = players;
     this.state   = null;
+
+    // count the players
+    for (var player in players){
+      if (players.hasOwnProperty(player)){
+        this.playerCount++;
+      }
+    }
 
     this.setupUI = function(){
       // clear the UI
@@ -38,7 +46,7 @@ var $        = ($ instanceof Object) ? $ : {};
       for (var enemy in this.enemies){
         if (this.enemies.hasOwnProperty(enemy)){
           var thisEnemy = this.enemies[enemy];
-          $("#combatModal .enemies").append("<div class='enemy'>" +
+          $("#combatModal .enemies").append("<div class='enemy' data-id='" + thisEnemy._id + "'" + " >" +
                                             "<img src='" + thisEnemy.image.image.src + "' />" +
                                             "</div>");
         }
@@ -84,14 +92,14 @@ var $        = ($ instanceof Object) ? $ : {};
       }
     };
 
-    this.attack = function(player, attackNum){
-      console.log("attack selected", player, attackNum);
+    this.attack = function(player, attackNum, target){
       var add = true;
       // make sure they don't already have an attack
       for (var i = 0; i < this.playerAttacks.length; i++){
         if (this.playerAttacks.player === player){
           // repeat so replace
-          this.playerAttacks[i] = dragons.attacks[this.players[player].attacks[attackNum]];
+          this.playerAttacks[i] = {attack: dragons.attacks[this.players[player].attacks[attackNum]],
+                                   target: target, player: player};
           add = false;
           break;
         }
@@ -99,10 +107,11 @@ var $        = ($ instanceof Object) ? $ : {};
       if (add){
         // new attack so add it
         console.log("pushing", dragons.attacks[this.players[player].attacks[attackNum]]);
-        this.playerAttacks.push({player: dragons.attacks[this.players[player].attacks[attackNum]]});
+        this.playerAttacks.push({player: player, target: target,
+                                 attack: dragons.attacks[this.players[player].attacks[attackNum]]});
       }
 
-      if (isServer && this.playerAttacks.length === this.players.length){
+      if (isServer && this.playerAttacks.length === this.playerCount){
         // ready to fight
         this.fight();
       }
@@ -115,11 +124,17 @@ var $        = ($ instanceof Object) ? $ : {};
           var theseAttacks = enemies[enemy].attacks;
           var attack = {};
           attack[enemies[enemy]._id] = pickAttack(theseAttacks);
-          this.enemyAttacks.push(attack);
+          var target = this.players[randRange(0, this.players.length - 1)];
+          this.enemyAttacks.push({attack: attack, target: target});
         }
       }
 
       // process the attacks and come up with the results
+    };
+
+    this.addPlayer = function(player){
+      this.players[player._id] = player;
+      this.playerCount++;
     };
 
   };

@@ -8,7 +8,7 @@
       updatePhysics, handleInput, createMovementVector, ping, handlePing,
       handleServerUpdate, updateTimers, processServerUpdates, handleServerError,
       startDraggingAttack, dragAttack, stopDraggingAttack,
-      handleCombatStart, handleAttackSelect,
+      handleCombatStart, handleAttackSelect, handleTargetSelect,
       checkForCombat,
       updateFrameRate,
       lerp, vLerp;
@@ -63,6 +63,7 @@
 
     // combat events
     $("#combatModal .attack").on("click", handleAttackSelect);
+    $("#combatModal").on("click", ".enemy", handleTargetSelect);
 
     socket = io.connect(window.location.protocol + "//" + window.location.host);
 
@@ -388,10 +389,26 @@
   handleAttackSelect = function(e){
     if (combatSession.state !== "attack"){ return } // only select the attack if that's the stage we're in
 
-    var attackNum = ($(this).hasClass("attack1")) ? 0 : 1;
     $(this).addClass("selected");
+    combatSession.state = "target";
+  };
 
-    socket.emit("attack", {num: attackNum}); // tell the server they selected this one
+  handleTargetSelect = function(e){
+    if (combatSession.state !== "target"){ return } // only select the enemy if that's the stage we're in
+    var target = $(this).attr("data-id");
+
+    // find the attack we selected earlier
+    var attacks = $("#combatModal .attack"), attackNum;
+    for (var i = 0; i < attacks.length; i++){
+      if ($(attacks[i]).hasClass("selected")){
+        attackNum = ($(attacks[i]).hasClass("attack1")) ? 0 : 1;
+        break;
+      }
+    }
+    combatSession.attack(yourGuy._id, attackNum, target);
+    $(this).addClass("selected");
+    combatSession.state = "waiting";
+    socket.emit("attack", {num: attackNum, target: target}); // tell the server they selected this one
   };
 
   handleFog = function(){

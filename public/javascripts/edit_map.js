@@ -10,7 +10,7 @@
       selectPiece, deselectPiece, rotatePiece, deletePiece, createOpenBlock,
       checkPiece,
       sync, syncError, syncSuccess,
-      handleMapClick;
+      handleMapClick, handleKeyPress;
 
   dragons.organizedMap = {};
 
@@ -22,6 +22,7 @@
     $(document).on("mousemove", dragPiece);
     $(".basePiece").on("mousedown", startDragging);
     $(document).on("mouseup", ".dragging", stopDragging);
+    $(document).on("keypress", handleKeyPress);
     $(".basePiece").on("dragstart", function(e){ e.preventDefault() }); // prevent browser dragging from getting in the way
     $("#rotatePiece").on("click", rotatePiece);
     $("#deletePiece").on("click", deletePiece);
@@ -281,6 +282,14 @@
       dragons.utils.buildMap(mapPieces); // organize the map object for easier editing access
       return piece;
     };
+  };
+
+  handleKeyPress = function(e){
+    switch(e.which){
+      case 114:
+        rotatePiece();
+        break;
+    }
   };
 
   // rotates the selected piece
