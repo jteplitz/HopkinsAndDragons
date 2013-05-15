@@ -11,6 +11,7 @@ var $        = ($ instanceof Object) ? $ : {};
   dragons.combat = function(enemies, players, yourID, conf){
     this.enemies = {};
     this.players = {};
+    this.roomId  = null;
     this.playerCount = 0;
 
     this.playerAttacks = [];
@@ -84,7 +85,6 @@ var $        = ($ instanceof Object) ? $ : {};
       this.setupUI();
     } else {
       dragons.attacks = buildAttacks(conf.get("players"));
-      console.log("built attacks", dragons.attacks);
     }
 
     this.start = function(){
@@ -101,7 +101,7 @@ var $        = ($ instanceof Object) ? $ : {};
         if (this.playerAttacks.player === player){
           // repeat so replace
           this.playerAttacks[i] = {attack: dragons.attacks[this.players[player].attacks[attackNum]],
-                                   name: this.players[player][attackNum],
+                                   name: this.players[player].attacks[attackNum],
                                    target: target, player: player};
           add = false;
           break;
@@ -109,9 +109,8 @@ var $        = ($ instanceof Object) ? $ : {};
       }
       if (add){
         // new attack so add it
-        console.log("pushing", dragons.attacks[this.players[player].attacks[attackNum]]);
         this.playerAttacks.push({player: player, target: target,
-                                 name: this.players[player][attackNum],
+                                 name: this.players[player].attacks[attackNum],
                                  attack: dragons.attacks[this.players[player].attacks[attackNum]]});
       }
 
@@ -128,10 +127,9 @@ var $        = ($ instanceof Object) ? $ : {};
       // simulate the enemy attacks
       for (var enemy in this.enemies){
         if (this.enemies.hasOwnProperty(enemy)){
-          console.log("enemy", this.enemies[enemy]);
-          var theseAttacks = this.enemies[enemy].baseEnemy.attacks;
-          var attack = {};
-          attack[this.enemies[enemy]._id] = pickAttack(theseAttacks);
+          var theseAttacks = this.enemies[enemy].gameData.baseEnemy.attacks;
+          var attack = null;
+          attack = pickAttack(theseAttacks);
           var target = playerList[randRange(0, playerList.length - 1)];
           this.enemyAttacks.push({attack: attack, enemy: this.enemies[enemy], target: target});
         }
@@ -141,17 +139,17 @@ var $        = ($ instanceof Object) ? $ : {};
       
       // players first
       for (i = 0; i < this.playerAttacks.length; i++){
-        var castMsg = this.players[this.playerAttack.player].name + " casts " +
+        var castMsg = this.players[this.playerAttacks[i].player].name + " casts " +
                       this.playerAttacks[i].name + " at " +
                       this.enemies[this.playerAttacks[i].target].gameData.baseEnemy.name;
         // check for hit
-        if (Math.Random() < this.playerAttacks[i].hit){
+        if (Math.random() < parseFloat(this.playerAttacks[i].attack.hit)){
           // hit
           damage = randRange(this.playerAttacks[i].attack.minDamage, this.playerAttacks[i].attack.maxDamage);
-          this.enemies[this.playerAttacks[i].enemy].health -= damage;
+          this.enemies[this.playerAttacks[i].target].health -= damage;
           messages.push(castMsg + ". It hits dealing " + damage + " damage.");
           if (this.enemies[this.playerAttacks[i].target].health <= 0){
-            messages.push("You have defeated " + this.enemeis[this.playerAttacks[i].target].gameData.baseEnemy.name + ".");
+            messages.push("You have defeated " + this.enemies[this.playerAttacks[i].target].gameData.baseEnemy.name + ".");
             delete this.enemies[this.playerAttacks[i].target];
           }
         } else {
@@ -163,12 +161,11 @@ var $        = ($ instanceof Object) ? $ : {};
       // now the enemies
       for (i = 0; i < this.enemyAttacks.length; i++){
         var thisAttack = this.enemyAttacks[i];
-        var enemyMsg = thisAttack.enemy.gameData.baseEnemy.name + " " +
-                      thisAttack.name + " " + this.players[thisAttack.target].name;
+        var enemyMsg = thisAttack.enemy.gameData.baseEnemy.name + " " + thisAttack.attack.name + " " + this.players[thisAttack.target].name;
         
         // check for hit
-        if (Math.random() < (thisAttack.hitChance / 100)){
-          damage = randRange(this.playerAttacks[i].attack.minDamage, this.playerAttacks[i].attack.maxDamage);
+        if (Math.random() < (thisAttack.attack.hitChance / 100)){
+          damage = randRange(thisAttack.attack.minDamage, thisAttack.attack.maxDamage);
           this.players[thisAttack.target].health -= damage;
           messages.push(enemyMsg + ". It hits dealing " + damage + " damage.");
           if (this.players[thisAttack.target].health <= 0){

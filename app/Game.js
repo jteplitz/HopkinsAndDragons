@@ -19,9 +19,10 @@
           Combat  = require("../public/javascripts/combat.js"),
           fog     = require("../public/javascripts/fog.js");
   
-  Game = function(id, gameInfo, sockets){
+  Game = function(id, dbGame, gameInfo, sockets){
     this.gameId    = id;
     this.randomId  = Math.random() * 100;
+    this.dbGame    = dbGame;
     this.gameInfo  = gameInfo;
     this.sockets   = sockets;
     this.players   = {};
@@ -70,7 +71,7 @@
     //setup the map
     var organizedMap = [];
     for (i = 0; i < gameInfo.map.length; i++){
-      var piece = gameInfo.map[i].toObject();
+      var piece = gameInfo.map[i];
       piece.x = piece.x * 2;
       piece.y = piece.y * 2;
       organizedMap.push(piece);
@@ -95,6 +96,7 @@
     // setup the enemies
     for (i = 0; i < this.gameInfo.enemies.length; i++){
       var currEnemy = this.gameInfo.enemies[i];
+      //console.log("enemy data", currEnemy);
       var enemy = new dragons.gameElements.Enemy(null, 50, 50, currEnemy.x * 2, currEnemy.y * 2, currEnemy.pullRadius, currEnemy._id);
       enemy.gameData = currEnemy;
       this.enemies.push(enemy);
@@ -141,6 +143,7 @@
               for (j = 0; j < combats.length; j++){
                 if (_.has(combats[j].enemies, this.enemies[i]._id)){
                   // this enemy is already in combat so just add this player to it
+                  console.log("enemy is already in combat");
                   combats[j].players[this.players[player]._id] = this.players[player];
                   combatIndex = j;
                   break checkEnemy;
@@ -152,18 +155,21 @@
               combatInfo.enemies[this.enemies[i]._id]      = this.enemies[i];
               combats.push(combatInfo);
               combatIndex = combats.length - 1;
+              console.log("added combat", combatIndex);
             } else {
               // we're already in combat so add this enemy to the combat
               // make sure that this enemy isn't in combat somewhere else
               for (j = 0; j < combats.length; j++){
+                console.log("checking combat", combats[j].enemies, this.enemies[i]._id);
                 if (_.has(combats[j].enemies, this.enemies[i]._id)){
                   // merge the combats
                   combats = mergeCombats(combats, combatIndex, j);
+                  console.log("merged combats", combats);
                   combatIndex = mergeCombats.length - 1;
                   break;
                 }
               }
-              //combats[combatIndex].enemies.push(this.enemies[i]);
+              combats[combatIndex].enemies[this.enemies[i]._id] = this.enemies[i];
             }
           }
         } // check enemy
@@ -181,7 +187,8 @@
         }
       }
       this.combats[this.combats.length - 1].start();
-      this.sockets["in"](this.room + "/c/" + this.combatIndex).emit("combatStart");
+      this.combats[this.combats.length - 1].roomId = this.room + "/c/" + this.combatIndex;
+      this.sockets["in"](this.combats[this.combats.length - 1].roomId).emit("combatStart");
     }
   };
 
@@ -205,6 +212,7 @@
   };
 
   _ptype.handleAttack = function(data, client){
+    var self = this;
     var player = this.players[client.player_id];
     // find the correct combat
     var combat = null;
@@ -218,7 +226,25 @@
     if (messages === null){
       console.log("no fight yet");
     } else {
-      console.log("fight", messages);
+      // fight has been fought
+      // send data to all clients in the fight
+
+      // only send over player and enemy health right now
+      var playerInfo = {}, enemyInfo = {};
+      for (player in combat.players){
+        if (combat.players.hasOwnProperty(player)){
+          playerInfo[player] = {health: combat.players[player].health};
+        }
+      }
+
+      for (var enemy in combat.enemies){
+        if (combat.enemies.hasOwnProperty(enemy)){
+          enemyInfo[enemy] = {health: combat.enemies[enemy].health};
+        }
+      }
+
+      this.sockets["in"](combat.roomId).emit("fight", {messages: messages, players: playerInfo,
+                                                      enemies: enemyInfo});
     }
   };
 
@@ -302,8 +328,8 @@
   // saves game state in db
   _ptype.saveGame = function(cb){
     // update positions
-    for (var i = 0; i < this.gameInfo.players.length; i++){
-      var player = this.gameInfo.players[i];
+    for (var i = 0; i < this.dbGame.players.length; i++){
+      var player = this.dbGame.players[i];
       if (_.has(this.players, player._id)){
         player.x = this.players[player._id].x;
         player.y = this.players[player._id].y;
@@ -311,10 +337,10 @@
         // TODO save level
       }
     }
-    this.gameInfo.fog = this.fogCanvas.outputPng();
-    this.gameInfo.markModified("players");
+    this.dbGame.fog = this.fogCanvas.outputPng();
+    this.dbGame.markModified("players");
 
-    this.gameInfo.save(cb);
+    this.dbGame.save(cb);
   };
 
   // cleans up a game before deletion

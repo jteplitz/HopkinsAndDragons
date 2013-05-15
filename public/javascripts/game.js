@@ -8,8 +8,8 @@
       updatePhysics, handleInput, createMovementVector, ping, handlePing,
       handleServerUpdate, updateTimers, processServerUpdates, handleServerError,
       startDraggingAttack, dragAttack, stopDraggingAttack,
-      handleCombatStart, handleAttackSelect, handleTargetSelect,
-      checkForCombat,
+      handleCombatStart, handleAttackSelect, handleTargetSelect, handleFight,
+      checkForCombat, displayMessage,
       updateFrameRate,
       lerp, vLerp;
 
@@ -17,7 +17,7 @@
   var canvas, fogCanvas, canvasContainer = {}, mapInfo = {}, mapPieces = [], socket,
       players = {}, yourGuy = null, keyboard, combatSession = null, enemies = [],
       playersLoading = 0, active = false,
-      draggingAttack = false,
+      draggingAttack = false, pendingMessages = [],
       // physics globals
       pdt = 0.001, pdte = new Date().getTime(),
       // network globals
@@ -94,6 +94,7 @@
 
     // combat socket events
     socket.on("combatStart", handleCombatStart);
+    socket.on("fight", handleFight);
 
     setInterval(updateTimers, 4);
     setupPlayers();
@@ -384,6 +385,27 @@
   // combat
   handleCombatStart = function(){
     combatSession.start();
+  };
+
+  handleFight = function(data){
+    // display the messaages
+    pendingMessages = data.messages;
+    displayMessage();
+
+    // update player and enemy info
+  };
+
+  // displays the latest pending message and recalls itself if another is needed
+  displayMessage = function(){
+    var displayOffset = 1500; // message offset in milliseconds
+
+    var message = pendingMessages[0];
+    $("#combatModal .messages").text(message);
+    pendingMessages.splice(0, 1);
+
+    if (pendingMessages.length > 0){
+      setTimeout(displayMessage, displayOffset);
+    }
   };
 
   handleAttackSelect = function(e){
