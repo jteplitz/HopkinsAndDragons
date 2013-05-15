@@ -51,14 +51,10 @@
       for (i = 0; i < game.players.length; i++){
         if (game.players[i].owner === self.user._id){
           playerId = game.players[i]._id;
-          console.log("name", game.players[i].name);
           attacks = self.conf.get("players:" + game.players[i].name + ":attacks");
           break;
         }
       }
-      console.log("got attacks", attacks);
-
-
       _.extend(data, {game: game, mapSize: mapSize, your_id: playerId, attacks: attacks});
       cb();
     });
@@ -114,7 +110,6 @@
         if (err){ return cb(err) }
 
         enemy.baseEnemy = baseEnemy;
-        console.log("saved", enemy);
         cb(null, enemy);
       });
     };

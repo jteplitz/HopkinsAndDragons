@@ -37,7 +37,6 @@ var $        = ($ instanceof Object) ? $ : {};
       if (!_.has(dragons, "organizedMap")){
         dragons.organizedMap = {};
       }
-      console.log("organizing pieces", map.length);
       for (var i = 0; i < map.length; i++){
         var mapPiece = map[i];
         if (!_.has(dragons.organizedMap, mapPiece.x)){

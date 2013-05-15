@@ -397,15 +397,37 @@
 
   // displays the latest pending message and recalls itself if another is needed
   displayMessage = function(){
+    if (pendingMessages.length === 0){
+      // no message. Go to next round
+      combatSession.reset();
+      return;
+    }
+
     var displayOffset = 1500; // message offset in milliseconds
 
     var message = pendingMessages[0];
-    $("#combatModal .messages").text(message);
+    $("#combatModal .messages").text(message.msg);
+
+    // update player and enemy health
+    if (_.has(message, "playerHealth")){
+      for (var player in message.playerHealth){
+        if (message.playerHealth.hasOwnProperty(player)){
+          combatSession.players[player].health = message.playerHealth[player];
+        }
+      }
+    }
+
+    if (_.has(message, "enemyHealth")){
+      for (var enemy in message.enemyHealth){
+        if (message.enemyHealth.hasOwnProperty(enemy)){
+          combatSession.enemies[enemy].health = message.enemyHealth[enemy];
+        }
+      }
+    }
+    combatSession.refresh(); // refresh the combat UI
     pendingMessages.splice(0, 1);
 
-    if (pendingMessages.length > 0){
-      setTimeout(displayMessage, displayOffset);
-    }
+    setTimeout(displayMessage, displayOffset);
   };
 
   handleAttackSelect = function(e){
@@ -431,6 +453,7 @@
     $(this).addClass("selected");
     combatSession.state = "waiting";
     socket.emit("attack", {num: attackNum, target: target}); // tell the server they selected this one
+    $("#combatModal .messages").text("Waiting for other players.");
   };
 
   handleFog = function(){

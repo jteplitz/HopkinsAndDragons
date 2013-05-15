@@ -6,7 +6,7 @@ var $        = ($ instanceof Object) ? $ : {};
 (function(){
   "use strict";
 
-  var buildAttacks, pickAttack, randRange, generatePlayerList;
+  var buildAttacks, pickAttack, randRange, generatePlayerList, emptyObject;
 
   dragons.combat = function(enemies, players, yourID, conf){
     this.enemies = {};
@@ -22,9 +22,18 @@ var $        = ($ instanceof Object) ? $ : {};
     this.state   = null;
 
     // count the players
-    for (var player in players){
-      if (players.hasOwnProperty(player)){
+    for (var player in this.players){
+      if (this.players.hasOwnProperty(player)){
+        this.players[player].health = 50;
         this.playerCount++;
+      }
+    }
+
+    // setup the enemeis
+    for (var enemy in this.enemies){
+      if (this.enemies.hasOwnProperty(enemy)){
+        var thisEnemy = this.enemies[enemy];
+        thisEnemy.health = thisEnemy.gameData.baseEnemy.health;
       }
     }
 
@@ -37,7 +46,6 @@ var $        = ($ instanceof Object) ? $ : {};
       for (var player in this.players){
         if (this.players.hasOwnProperty(player)){
           var thisPlayer = this.players[player];
-          thisPlayer.health = 50;
           $("#combatModal .players").append("<div class='player'>" +
                                             "<img src='" + thisPlayer.image.src + "' />" +
                                             "</div>");
@@ -48,7 +56,6 @@ var $        = ($ instanceof Object) ? $ : {};
       for (var enemy in this.enemies){
         if (this.enemies.hasOwnProperty(enemy)){
           var thisEnemy = this.enemies[enemy];
-          thisEnemy.health = thisEnemy.gameData.baseEnemy.health;
           $("#combatModal .enemies").append("<div class='enemy' data-id='" + thisEnemy._id + "'" + " >" +
                                             "<img src='" + thisEnemy.image.image.src + "' />" +
                                             "</div>");
@@ -98,7 +105,7 @@ var $        = ($ instanceof Object) ? $ : {};
       var add = true;
       // make sure they don't already have an attack
       for (var i = 0; i < this.playerAttacks.length; i++){
-        if (this.playerAttacks.player === player){
+        if (this.playerAttacks[i].player === player){
           // repeat so replace
           this.playerAttacks[i] = {attack: dragons.attacks[this.players[player].attacks[attackNum]],
                                    name: this.players[player].attacks[attackNum],
@@ -113,6 +120,8 @@ var $        = ($ instanceof Object) ? $ : {};
                                  name: this.players[player].attacks[attackNum],
                                  attack: dragons.attacks[this.players[player].attacks[attackNum]]});
       }
+
+      console.log("attack", add, this.playerAttacks.length, this.playerCount);
 
       if (isServer && this.playerAttacks.length === this.playerCount){
         // ready to fight
@@ -147,14 +156,20 @@ var $        = ($ instanceof Object) ? $ : {};
           // hit
           damage = randRange(this.playerAttacks[i].attack.minDamage, this.playerAttacks[i].attack.maxDamage);
           this.enemies[this.playerAttacks[i].target].health -= damage;
-          messages.push(castMsg + ". It hits dealing " + damage + " damage.");
+          castMsg += ". It hits dealing " + damage + " damage.";
+          var enemyHealth = {};
+          enemyHealth[this.playerAttacks[i].target] = this.enemies[this.playerAttacks[i].target].health;
+          messages.push({
+            msg: castMsg,
+            enemyHealth: enemyHealth
+          });
           if (this.enemies[this.playerAttacks[i].target].health <= 0){
-            messages.push("You have defeated " + this.enemies[this.playerAttacks[i].target].gameData.baseEnemy.name + ".");
+            messages.push({msg: "You have defeated " + this.enemies[this.playerAttacks[i].target].gameData.baseEnemy.name + "."});
             delete this.enemies[this.playerAttacks[i].target];
           }
         } else {
           // not a hit
-          messages.push(castMsg + ". It misses.");
+          messages.push({msg: castMsg + ". It misses."});
         }
       }
 
@@ -167,16 +182,43 @@ var $        = ($ instanceof Object) ? $ : {};
         if (Math.random() < (thisAttack.attack.hitChance / 100)){
           damage = randRange(thisAttack.attack.minDamage, thisAttack.attack.maxDamage);
           this.players[thisAttack.target].health -= damage;
-          messages.push(enemyMsg + ". It hits dealing " + damage + " damage.");
+          enemyMsg += ". It hits dealing " + damage + " damage.";
+
+          var playerHealth = {};
+          playerHealth[thisAttack.target] = this.players[thisAttack.target].health;
+          messages.push({
+            msg: enemyMsg,
+            playerHealth: playerHealth
+          });
           if (this.players[thisAttack.target].health <= 0){
-            messages.push(this.players[thisAttack.target].name + " has been defeated.");
+            messages.push({msg: this.players[thisAttack.target].name + " has been defeated."});
           }
         } else {
           // not a hit
-          messages.push(enemyMsg + ". It misses.");
+          messages.push({msg: enemyMsg + ". It misses."});
         }
       }
+      
+      // remove the attacks that we just simulated
+      this.playerAttacks.splice(0);
+      this.enemyAttacks.splice(0);
       return messages;
+    };
+
+    // refresh the combat UI
+    this.refresh = function(){
+      // TODO: reset all health bars
+
+      // reset the big health bar
+      var health_percent = (this.players[this.player].health / 50) * 100;
+      $("#combatModal .healthMeter").animate({"width": health_percent + "%"}, 100);
+    };
+
+    // resets combat UI to move to next round
+    this.reset = function(){
+      $("#combatModal .selected").removeClass("selected");
+      $("#combatModal .messages").text("Select an attack.");
+      this.state = "attack";
     };
 
     this.addPlayer = function(player){

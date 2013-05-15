@@ -99,7 +99,6 @@
         if (err){ return cb(err) }
 
         enemy.baseEnemy = baseEnemy;
-        console.log("saved", enemy);
         cb(null, enemy);
       });
     };

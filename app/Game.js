@@ -78,11 +78,7 @@
     }
     this.canvas.setMap(dragons.utils.buildMap(organizedMap)); // organize the map object for easier access
 
-    this.intervals.push(setInterval(this.physicsUpdate.bind(this), physicsUpdateTime));
-    this.intervals.push(setInterval(this.gameUpdate.bind(this), gameUpdateTime));
     this.intervals.push(setInterval(this.updateTimers.bind(this), 4));
-    this.intervals.push(setInterval(this.saveGame.bind(this), saveGameTime));
-    console.log("set up", this.intervals);
 
     // setup the players
     for (i = 0; i < this.gameInfo.players.length; i++){
@@ -127,11 +123,11 @@
   };
 
   _ptype.checkForCombat = function(){
-    var combats = [], i, j;
-    checkPlayer: for (var player in this.players){
+    var combats = [], i, j, player;
+    checkPlayer: for (player in this.players){
       if (this.players.hasOwnProperty(player) && !this.players[player].inCombat){
-      var combatIndex = null;
-      checkEnemy: for (i = 0; i < this.enemies.length; i++){
+        var combatIndex = null;
+        checkEnemy: for (i = 0; i < this.enemies.length; i++){
           if (this.enemies[i].x - this.enemies[i].pullRadius < this.players[player].x &&
               this.enemies[i].x + this.enemies[i].pullRadius > this.players[player].x &&
               this.enemies[i].y - this.enemies[i].pullRadius < this.players[player].y &&
@@ -155,16 +151,13 @@
               combatInfo.enemies[this.enemies[i]._id]      = this.enemies[i];
               combats.push(combatInfo);
               combatIndex = combats.length - 1;
-              console.log("added combat", combatIndex);
             } else {
               // we're already in combat so add this enemy to the combat
               // make sure that this enemy isn't in combat somewhere else
               for (j = 0; j < combats.length; j++){
-                console.log("checking combat", combats[j].enemies, this.enemies[i]._id);
                 if (_.has(combats[j].enemies, this.enemies[i]._id)){
                   // merge the combats
                   combats = mergeCombats(combats, combatIndex, j);
-                  console.log("merged combats", combats);
                   combatIndex = mergeCombats.length - 1;
                   break;
                 }
@@ -179,10 +172,19 @@
       this.combats.push(new Combat(combats[i].enemies, combats[i].players, null, conf));
       this.combatIndex++;
       // add this client to the combat room
-      for (j = 0; j < combats[i].players.length; j++){
-        for (var w = 0; w < this.clients.length; w++){
-          if (this.clients[w].user._id === combats[i].players[j]._id){
-            this.clients[w].join(this.room + "/c/" + this.combatIndex);
+      var added = false;
+      for (player in combats[i].players){
+        if (combats[i].players.hasOwnProperty(player)){
+          for (var w = 0; w < this.clients.length; w++){
+            if (String(this.clients[w].player_id) === player){
+              console.log("adding client to room");
+              added = true;
+              this.clients[w].join(this.room + "/c/" + this.combatIndex);
+              break;
+            }
+          }
+          if (!added){
+            console.log("fuck", player, this.clients);
           }
         }
       }
@@ -226,6 +228,7 @@
     if (messages === null){
       console.log("no fight yet");
     } else {
+      console.log("fight", messages);
       // fight has been fought
       // send data to all clients in the fight
 
@@ -243,6 +246,7 @@
         }
       }
 
+      console.log("sending fight", this.sockets.clients(this.combats[this.combats.length - 1].roomId.length));
       this.sockets["in"](combat.roomId).emit("fight", {messages: messages, players: playerInfo,
                                                       enemies: enemyInfo});
     }
@@ -299,6 +303,12 @@
         seqNums[this.players[player]._id] = this.players[player].lastHandledInput;
       }
     }
+
+    // start the various game loops
+    this.intervals.push(setInterval(this.physicsUpdate.bind(this), physicsUpdateTime));
+    this.intervals.push(setInterval(this.gameUpdate.bind(this), gameUpdateTime));
+    this.intervals.push(setInterval(this.saveGame.bind(this), saveGameTime));
+    
     this.sockets["in"](this.room).emit("start", {time: this.localTime, inputNums: seqNums});
   };
 
