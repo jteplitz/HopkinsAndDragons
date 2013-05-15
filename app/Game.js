@@ -214,7 +214,12 @@
         break;
       }
     }
-    combat.attack(client.player_id, data.num);
+    var messages = combat.attack(client.player_id, data.num, data.target);
+    if (messages === null){
+      console.log("no fight yet");
+    } else {
+      console.log("fight", messages);
+    }
   };
 
   _ptype.gameUpdate = function(){

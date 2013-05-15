@@ -47,7 +47,7 @@ var $        = ($ instanceof Object) ? $ : {};
       for (var enemy in this.enemies){
         if (this.enemies.hasOwnProperty(enemy)){
           var thisEnemy = this.enemies[enemy];
-          thisEnemy.health = thisEnemy.gameData.baseObject.health;
+          thisEnemy.health = thisEnemy.gameData.baseEnemy.health;
           $("#combatModal .enemies").append("<div class='enemy' data-id='" + thisEnemy._id + "'" + " >" +
                                             "<img src='" + thisEnemy.image.image.src + "' />" +
                                             "</div>");
@@ -126,13 +126,14 @@ var $        = ($ instanceof Object) ? $ : {};
     this.fight = function(){
       var playerList = generatePlayerList(this.players), messages = [], i, damage;
       // simulate the enemy attacks
-      for (var enemy in enemies){
-        if (enemies.hasOwnProperty(enemy)){
-          var theseAttacks = enemies[enemy].attacks;
+      for (var enemy in this.enemies){
+        if (this.enemies.hasOwnProperty(enemy)){
+          console.log("enemy", this.enemies[enemy]);
+          var theseAttacks = this.enemies[enemy].baseEnemy.attacks;
           var attack = {};
-          attack[enemies[enemy]._id] = pickAttack(theseAttacks);
+          attack[this.enemies[enemy]._id] = pickAttack(theseAttacks);
           var target = playerList[randRange(0, playerList.length - 1)];
-          this.enemyAttacks.push({attack: attack, enemy: enemies[enemy], target: target});
+          this.enemyAttacks.push({attack: attack, enemy: this.enemies[enemy], target: target});
         }
       }
 
