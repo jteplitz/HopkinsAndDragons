@@ -291,7 +291,7 @@
   setupPlayer = function(image, playerInfo){
     return function(){
       var player = new dragons.gameElements.Player(image, 50, 50, playerInfo.x, playerInfo.y, playerInfo.name, playerInfo._id);
-      player.attacks = playerInfo.attacks;
+      player.attacks = (_.has(playerInfo, "attacks")) ? playerInfo.attacks : [];
       playersLoading--;
       canvas.addElement(player);
       players[playerInfo._id] = canvas.elements[canvas.elements.length - 1];
@@ -379,16 +379,33 @@
     }*/
 
     //sync();
-    window.requestAnimationFrame( main.bind(this), $("#map")[0]);
+    window.requestAnimationFrame(main.bind(this), $("#map")[0]);
   };
 
   // combat
-  handleCombatStart = function(){
+  handleCombatStart = function(data){
+    var combatPlayers = {}, combatEnemies = {}, i;
+    // get the full enemy and player information from the ids
+    for (i = 0; i < data.players.length; i++){
+      combatPlayers[data.players[i]] = players[data.players[i]];
+    }
+    for (i = 0; i < data.enemies.length; i++){
+      // enemies array really should be object
+      for (var j = 0; j < enemies.length; j++){
+        if (enemies[j]._id === data.enemies[i]){
+          combatEnemies[data.enemies[i]] = enemies[j];
+        }
+      }
+    }
+    combatSession.players = combatPlayers;
+    combatSession.enemies = combatEnemies;
+    combatSession.setupUI();
+
     combatSession.start();
   };
 
   handleFight = function(data){
-    // display the messaages
+    // display the messages
     pendingMessages = data.messages;
     displayMessage();
 

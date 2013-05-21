@@ -55,6 +55,40 @@
   right: 0;
 }
 
+.enemies, .players{
+  .enemy, .player{
+    float: right;
+    img{
+      max-width: 300px;
+    }
+    .healthBar{
+      position: relative;
+      width: 108px;
+      height: 16px;
+      margin-right: auto;
+      margin-left: auto;
+      background-image: url(/img/empty_bar.png);
+
+      .healthContainer{
+        width: 104px;
+        height: 12px;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+
+        .healthMeter{
+          height: 12px;
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          background-image: url(/img/health.png);
+        }
+      }
+    }
+  }
+}
+
 #combatModal{
   .modal-body{
   }
@@ -65,7 +99,7 @@
 
   .enemies{
     float: right;
-    width: 200px;
+    width: 300px;
   }
 
   .controls{

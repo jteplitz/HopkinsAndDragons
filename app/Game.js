@@ -6,7 +6,7 @@
       Canvas = require("canvas"),
       conf = require('nconf').argv().env().file({file: __dirname + '/../config.json'}),
 
-      Game, _ptype, organizeMovements, mergeCombats,
+      Game, _ptype, organizeMovements, mergeCombats, cleanCombatData,
 
       // physics stuff
       physicsUpdateTime = conf.get("gameGlobals:physicsUpdateTime"),
@@ -53,7 +53,7 @@
       }
     }
 
-    this.canvas = new dragons.canvas({width: mapSize.width, height: mapSize.height}, conf);
+    this.canvas    = new dragons.canvas({width: mapSize.width, height: mapSize.height}, conf);
     this.fogCanvas = new Canvas(mapSize.width, mapSize.height);
     this.fogCanvas = new fog.fogCanvas(this.fogCanvas, mapSize.width, mapSize.height,
                                        playerSight);
@@ -141,6 +141,7 @@
                   // this enemy is already in combat so just add this player to it
                   console.log("enemy is already in combat");
                   combats[j].players[this.players[player]._id] = this.players[player];
+                  console.log("added players", combats[j].players);
                   combatIndex = j;
                   break checkEnemy;
                 }
@@ -188,14 +189,33 @@
           }
         }
       }
-      this.combats[this.combats.length - 1].start();
-      this.combats[this.combats.length - 1].roomId = this.room + "/c/" + this.combatIndex;
-      this.sockets["in"](this.combats[this.combats.length - 1].roomId).emit("combatStart");
+      var thisCombat = this.combats[this.combats.length - 1];
+      thisCombat.start();
+      thisCombat.roomId = this.room + "/c/" + this.combatIndex;
+
+      this.sockets["in"](thisCombat.roomId).emit("combatStart", cleanCombatData(thisCombat));
     }
+  };
+
+  cleanCombatData = function(combat){
+    // clean up the players and enemies
+    var players = [], enemies = [];
+    for (var player in combat.players){
+      if (combat.players.hasOwnProperty(player)){
+        players.push(player);
+      }
+    }
+    for (var enemy in combat.enemies){
+      if (combat.enemies.hasOwnProperty(enemy)){
+        enemies.push(enemy);
+      }
+    }
+    return {players: players, enemies: enemies};
   };
 
   // merges the players and enemies of two combats, removes those combats from the array, and places the merged entry at the end
   mergeCombats = function(combats, sourceNum, destNum){
+    console.log("merging combats");
     var source = combats[source];
     var dest   = combats[dest];
     for (var i = 0; i < source.players.length; i++){
@@ -284,12 +304,36 @@
     }
     this.clients.push(client);
     client.join(this.room);
-    console.log("connected to", this.room);
+    
+    // check if they're in combat
 
+    // figure out what player this is
+    for (var player in this.players){
+      if (this.players.hasOwnProperty(player)){
+        if (this.players[player].owner === client.user._id){
+          break;
+        }
+      }
+    }
+    var combat = null;
+    for (i = 0; i < this.combats.length; i++){
+      if (_.has(this.combats[i].players, player)){
+        console.log("player connected is in combat");
+        // they're in combat
+        combat = this.combats[i];
+        break;
+      }
+    }
 
     if(this.clients.length >=  2){
       // we're ready to go
       this.start();
+      if (combat !== null){
+        // send the combat start message
+        client.emit("combatStart", cleanCombatData(combat));
+        // add them to the room
+        client.join(combat.roomId);
+      }
     }
     return true;
   };

@@ -48,13 +48,57 @@
   left: 0;
   right: 0;
 }
+.enemies .enemy,
+.players .enemy,
+.enemies .player,
+.players .player {
+  float: right;
+}
+.enemies .enemy img,
+.players .enemy img,
+.enemies .player img,
+.players .player img {
+  max-width: 300px;
+}
+.enemies .enemy .healthBar,
+.players .enemy .healthBar,
+.enemies .player .healthBar,
+.players .player .healthBar {
+  position: relative;
+  width: 108px;
+  height: 16px;
+  margin-right: auto;
+  margin-left: auto;
+  background-image: url(/img/empty_bar.png);
+}
+.enemies .enemy .healthBar .healthContainer,
+.players .enemy .healthBar .healthContainer,
+.enemies .player .healthBar .healthContainer,
+.players .player .healthBar .healthContainer {
+  width: 104px;
+  height: 12px;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+}
+.enemies .enemy .healthBar .healthContainer .healthMeter,
+.players .enemy .healthBar .healthContainer .healthMeter,
+.enemies .player .healthBar .healthContainer .healthMeter,
+.players .player .healthBar .healthContainer .healthMeter {
+  height: 12px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-image: url(/img/health.png);
+}
 #combatModal .players {
   float: left;
   width: 100px;
 }
 #combatModal .enemies {
   float: right;
-  width: 200px;
+  width: 300px;
 }
 #combatModal .controls .player {
   background-image: url(/img/health_bar.png);

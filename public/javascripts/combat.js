@@ -46,8 +46,12 @@ var $        = ($ instanceof Object) ? $ : {};
       for (var player in this.players){
         if (this.players.hasOwnProperty(player)){
           var thisPlayer = this.players[player];
-          $("#combatModal .players").append("<div class='player'>" +
+          $("#combatModal .players").append("<div class='player' data-id='" + thisPlayer._id + "'>" +
                                             "<img src='" + thisPlayer.image.src + "' />" +
+                                            "<div class='healthBar'>" +
+                                            "<div class='healthContainer'>" +
+                                            "<div class='healthMeter'></div>" +
+                                            "</div></div>" +
                                             "</div>");
         }
       }
@@ -58,6 +62,10 @@ var $        = ($ instanceof Object) ? $ : {};
           var thisEnemy = this.enemies[enemy];
           $("#combatModal .enemies").append("<div class='enemy' data-id='" + thisEnemy._id + "'" + " >" +
                                             "<img src='" + thisEnemy.image.image.src + "' />" +
+                                            "<div class='healthBar'>" +
+                                            "<div class='healthContainer'>" +
+                                            "<div class='healthMeter'></div>" +
+                                            "</div></div>" +
                                             "</div>");
         }
       }
@@ -66,7 +74,7 @@ var $        = ($ instanceof Object) ? $ : {};
       $("#combatModal .portrait").attr("src", this.players[this.player].image.src);
       for (var i = 0; i < this.players[this.player].attacks.length; i++){
         var thisAttack = dragons.attacks[this.players[this.player].attacks[i]];
-        
+        $("#combatModal .attack" + (i + 1)).empty();
         $("#combatModal .attack" + (i + 1)).append("<img src='" + thisAttack.icon + "' " +
                                                   "data-toggle='tooltip' " +
                                                   "data-original-title=\"" +
@@ -207,11 +215,25 @@ var $        = ($ instanceof Object) ? $ : {};
 
     // refresh the combat UI
     this.refresh = function(){
-      // TODO: reset all health bars
+      var width;
+      for (var player in this.players){
+        if (this.players.hasOwnProperty(player)){
+          var thisPlayer = this.players[player];
+          width = ((thisPlayer.health / 50) * 100) + "%";
+          $("#combatModal .player[data-id=" + thisPlayer._id + "] .healthMeter").animate({"width": width}, 100);
+        }
+      }
+      for (var enemy in this.enemies){
+        if (this.enemies.hasOwnProperty(enemy)){
+          var thisEnemy = this.enemies[enemy];
+          width = ((thisEnemy.health / thisEnemy.gameData.baseEnemy.health) * 100) + "%";
+          $("#combatModal .enemy[data-id=" + thisEnemy._id + "] .healthMeter").animate({"width": width}, 100);
+        }
+      }
 
       // reset the big health bar
-      var health_percent = (this.players[this.player].health / 50) * 100;
-      $("#combatModal .healthMeter").animate({"width": health_percent + "%"}, 100);
+      width = (this.players[this.player].health / 50) * 100;
+      $("#combatModal .controls .healthMeter").animate({"width": width + "%"}, 100);
     };
 
     // resets combat UI to move to next round
