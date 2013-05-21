@@ -8,9 +8,9 @@
       updatePhysics, handleInput, createMovementVector, ping, handlePing,
       handleServerUpdate, updateTimers, processServerUpdates, handleServerError,
       startDraggingAttack, dragAttack, stopDraggingAttack,
-      handleCombatStart, handleAttackSelect, handleTargetSelect, handleFight,
+      handleCombatStart, handleAttackSelect, handleTargetSelect, handleFight, handleCombatJoin,
       checkForCombat, displayMessage,
-      updateFrameRate,
+      updateFrameRate, getEnemy,
       lerp, vLerp;
 
   // globals
@@ -95,6 +95,7 @@
     // combat socket events
     socket.on("combatStart", handleCombatStart);
     socket.on("fight", handleFight);
+    socket.on("combatJoin", handleCombatJoin);
 
     setInterval(updateTimers, 4);
     setupPlayers();
@@ -157,10 +158,10 @@
 
     var combatEnemies = {}, fighting = false;
     for (var i = 0; i < enemies.length; i++){
-      if (enemies[i].x - enemies[i].pullRadius < yourGuy.x &&
-          enemies[i].x + enemies[i].pullRadius > yourGuy.x &&
-          enemies[i].y - enemies[i].pullRadius < yourGuy.y &&
-          enemies[i].y + enemies[i].pullRadius > yourGuy.y){
+      if ((enemies[i].x + (enemies[i].width / 2)) - enemies[i].pullRadius < yourGuy.x + yourGuy.width &&
+          (enemies[i].x + (enemies[i].width / 2)) + enemies[i].pullRadius > yourGuy.x &&
+          (enemies[i].y + (enemies[i].height / 2)) - enemies[i].pullRadius < yourGuy.y + yourGuy.height &&
+          (enemies[i].y + (enemies[i].height / 2)) + enemies[i].pullRadius > yourGuy.y){
         combatEnemies[enemies[i]._id] = enemies[i];
         fighting = true;
       }
@@ -441,10 +442,56 @@
         }
       }
     }
+
+    if (_.has(message, "setup") && message.setup){
+      // resetup the UI
+      combatSession.setupUI();
+    }
     combatSession.refresh(); // refresh the combat UI
     pendingMessages.splice(0, 1);
 
     setTimeout(displayMessage, displayOffset);
+  };
+
+  handleCombatJoin = function(data){
+    // figure out which enemies are new if any
+    var newEnemies = "";
+    combatSession.addPlayer(players[data.player]);
+
+    for (var i = 0; i < data.combat.enemies.length; i++){
+      if (_.has(combatSession.enemies, data.combat.enemies[i])){
+        continue;
+      }
+      var thisEnemy = getEnemy(data.combat.enemies[i]);
+
+      // this is a new enemy
+      if (newEnemies !== ""){
+        newEnemies += ", a " + thisEnemy.name;
+      } else {
+        newEnemies = "a " + thisEnemy.name;
+      }
+      combatSession.enemies[data.combat.enemies[i]] = thisEnemy;
+    }
+    var message = players[data.player].name + " has joined the fight.";
+    if (newEnemies !== ""){
+      message += " He has brought with him " + newEnemies + ".";
+    }
+    var messageNum = pendingMessages.length;
+    pendingMessages.push({msg: message, setup: true});
+
+    if (messageNum === 0){
+      displayMessage();
+    }
+  };
+
+  // really should have made enemies an object
+  getEnemy = function(id){
+    for (var i = 0; i < enemies.length; i++){
+      if (String(enemies[i]._id) === String(id)){
+        return enemies[i];
+      }
+    }
+    return null;
   };
 
   handleAttackSelect = function(e){

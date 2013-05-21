@@ -6,7 +6,7 @@
       Canvas = require("canvas"),
       conf = require('nconf').argv().env().file({file: __dirname + '/../config.json'}),
 
-      Game, _ptype, organizeMovements, mergeCombats, cleanCombatData,
+      Game, _ptype, organizeMovements, mergeCombats, cleanCombatData, addClientToCombat,
 
       // physics stuff
       physicsUpdateTime = conf.get("gameGlobals:physicsUpdateTime"),
@@ -123,15 +123,16 @@
   };
 
   _ptype.checkForCombat = function(){
-    var combats = [], i, j, player;
+    var combats = [], i, j, player, combatRunning = false;
     checkPlayer: for (player in this.players){
       if (this.players.hasOwnProperty(player) && !this.players[player].inCombat){
         var combatIndex = null;
         checkEnemy: for (i = 0; i < this.enemies.length; i++){
-          if (this.enemies[i].x - this.enemies[i].pullRadius < this.players[player].x &&
-              this.enemies[i].x + this.enemies[i].pullRadius > this.players[player].x &&
-              this.enemies[i].y - this.enemies[i].pullRadius < this.players[player].y &&
-              this.enemies[i].y + this.enemies[i].pullRadius > this.players[player].y){
+          var thisEnemy = this.enemies[i], thisPlayer = this.players[player];
+          if ((thisEnemy.x + (thisEnemy.width / 2)) - thisEnemy.pullRadius < thisPlayer.x + thisPlayer.width &&
+              (thisEnemy.x + (thisEnemy.width / 2)) + thisEnemy.pullRadius > thisPlayer.x &&
+              (thisEnemy.y + (thisEnemy.height / 2)) - thisEnemy.pullRadius < thisPlayer.y + thisPlayer.height &&
+              (thisEnemy.y + (thisEnemy.height / 2)) + thisEnemy.pullRadius > thisPlayer.y){
             this.players[player].inCombat = true;
             // we're in this enemies pull radius
             if (combatIndex === null){
@@ -143,7 +144,18 @@
                   combats[j].players[this.players[player]._id] = this.players[player];
                   console.log("added players", combats[j].players);
                   combatIndex = j;
-                  break checkEnemy;
+                  combatRunning = false;
+                  continue checkEnemy;
+                }
+              }
+              // check if this enemy is in a running combat session
+              for (j = 0; j < this.combats.length; j++){
+                if (_.has(this.combats[j].enemies, this.enemies[i]._id)){
+                  this.combats[j].addPlayer(this.players[player]);
+                  addClientToCombat(this.players[player], this.clients, this.combats[j], this.sockets);
+                  combatIndex = j;
+                  combatRunning = true;
+                  continue checkEnemy;
                 }
               }
               // this enemy is not in combat with anybody so create a new combat
@@ -153,17 +165,33 @@
               combats.push(combatInfo);
               combatIndex = combats.length - 1;
             } else {
-              // we're already in combat so add this enemy to the combat
-              // make sure that this enemy isn't in combat somewhere else
-              for (j = 0; j < combats.length; j++){
-                if (_.has(combats[j].enemies, this.enemies[i]._id)){
-                  // merge the combats
-                  combats = mergeCombats(combats, combatIndex, j);
-                  combatIndex = mergeCombats.length - 1;
-                  break;
+              if (!combatRunning){
+                // we're already in combat so add this enemy to the combat
+                // make sure that this enemy isn't in combat somewhere else
+                for (j = 0; j < combats.length; j++){
+                  if (_.has(combats[j].enemies, this.enemies[i]._id)){
+                    // merge the combats
+                    combats = mergeCombats(combats, combatIndex, j);
+                    combatIndex = combats.length - 1;
+                    break;
+                  }
                 }
+                combats[combatIndex].enemies[this.enemies[i]._id] = this.enemies[i];
+              } else {
+                // this is already an active combat session that we've joined. Add the enemy
+                console.log("adding extra enemy to combat session");
+
+                // check to make sure that the enemy isn't alrady in a different combat session
+                for (j = 0; j < this.combats.length; j++){
+                  if (_.has(this.combats[j], this.enemies[i]._id)){
+                    this.combats = mergeCombats(this.combats, combatIndex, j);
+                    combatIndex = this.combats.length - 1;
+                    break;
+                  }
+                }
+                this.combats[combatIndex].enemies[this.enemies[i]._id] = this.enemies[i];
+                addClientToCombat(this.players[player], this.clients, this.combats[combatIndex], this.sockets);
               }
-              combats[combatIndex].enemies[this.enemies[i]._id] = this.enemies[i];
             }
           }
         } // check enemy
@@ -213,6 +241,17 @@
     return {players: players, enemies: enemies};
   };
 
+  addClientToCombat = function(player, clients, combat, socket){
+    var socketCombat = cleanCombatData(combat);
+    for (var i = 0; i < clients.length; i++){
+      if (String(clients[i].player_id) === String(player._id)){
+        socket["in"](combat.roomId).emit("combatJoin", {player: player._id, combat: socketCombat});
+        clients[i].join(combat.roomId);
+        clients[i].emit("combatStart", socketCombat); // start their combat
+      }
+    }
+  };
+
   // merges the players and enemies of two combats, removes those combats from the array, and places the merged entry at the end
   mergeCombats = function(combats, sourceNum, destNum){
     console.log("merging combats");
@@ -220,12 +259,12 @@
     var dest   = combats[dest];
     for (var i = 0; i < source.players.length; i++){
       if (_.has(dest.players, source.players[i]._id)){
-        dest.players.push[source.players[i]._id] = source.players[i];
+        dest.players[source.players[i]._id] = source.players[i];
       }
     }
     for (i = 0; i < source.enemies.length; i++){
       if (_.has(dest.enemies, source.enemies[i]._id)){
-        dest.enemies.push[source.enemies[i]._id] = source.enemies[i];
+        dest.enemies[source.enemies[i]._id] = source.enemies[i];
       }
     }
     combats.splice(sourceNum, 1);
@@ -370,6 +409,9 @@
     if (client.player_id === null){ return }
 
     var player = this.players[client.player_id];
+    if (_.isUndefined(player.attacks)){
+      player.attacks = [];
+    }
     if (_.has(data, "attack1")){
       player.attacks[0] = data.attack1;
     }
