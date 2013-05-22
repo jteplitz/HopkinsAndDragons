@@ -158,10 +158,10 @@
 
     var combatEnemies = {}, fighting = false;
     for (var i = 0; i < enemies.length; i++){
-      if ((enemies[i].x + (enemies[i].width / 2)) - enemies[i].pullRadius < yourGuy.x + yourGuy.width &&
-          (enemies[i].x + (enemies[i].width / 2)) + enemies[i].pullRadius > yourGuy.x &&
-          (enemies[i].y + (enemies[i].height / 2)) - enemies[i].pullRadius < yourGuy.y + yourGuy.height &&
-          (enemies[i].y + (enemies[i].height / 2)) + enemies[i].pullRadius > yourGuy.y){
+      if ((enemies[i].x + (enemies[i].width / 2)) - (enemies[i].pullRadius * 2) < yourGuy.x + yourGuy.width &&
+          (enemies[i].x + (enemies[i].width / 2)) + (enemies[i].pullRadius * 2) > yourGuy.x &&
+          (enemies[i].y + (enemies[i].height / 2)) - (enemies[i].pullRadius * 2) < yourGuy.y + yourGuy.height &&
+          (enemies[i].y + (enemies[i].height / 2)) + (enemies[i].pullRadius * 2) > yourGuy.y){
         combatEnemies[enemies[i]._id] = enemies[i];
         fighting = true;
       }
@@ -495,6 +495,9 @@
   };
 
   handleAttackSelect = function(e){
+    var targetNum = ($(this).hasClass("attack1")) ? 0 : 1;
+    if (yourGuy.attacks.length + 1 < targetNum){ return } // not a valid selection
+
     if (combatSession.state !== "attack"){ return } // only select the attack if that's the stage we're in
 
     $(this).addClass("selected");

@@ -48,10 +48,8 @@
   left: 0;
   right: 0;
 }
-.enemies .enemy,
-.players .enemy,
-.enemies .player,
-.players .player {
+.enemies .enemyContainer,
+.players .enemyContainer {
   float: right;
 }
 .enemies .enemy img,

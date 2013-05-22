@@ -24,23 +24,32 @@ var $        = ($ instanceof Object) ? $ : {};
     // count the players
     for (var player in this.players){
       if (this.players.hasOwnProperty(player)){
-        this.players[player].health = 50;
-        this.playerCount++;
+        console.log("checking player health", _.isUndefined(this.players[player].health));
+        if (_.isUndefined(this.players[player].health) || _.isNull(this.players[player].health)){
+          this.players[player].health = 50;
+        }
+
+        // only add to the player account if they can attack
+        if (!_.isUndefined(this.players[player].attacks) && this.players[player].attacks.length !== 0){
+          this.playerCount++;
+        }
       }
     }
 
-    // setup the enemeis
+    // setup the enemies
     for (var enemy in this.enemies){
       if (this.enemies.hasOwnProperty(enemy)){
         var thisEnemy = this.enemies[enemy];
-        thisEnemy.health = thisEnemy.gameData.baseEnemy.health;
+        if (_.isUndefined(thisEnemy.health) || _.isNull(thisEnemy.health)){
+          thisEnemy.health = thisEnemy.gameData.baseEnemy.health;
+        }
       }
     }
 
     this.setupUI = function(){
       // clear the UI
       $("#combatModal .players").empty();
-      $("#combatModal .enemies").empty();
+      $("#combatModal .enemyContainer").empty();
 
       // load the players
       for (var player in this.players){
@@ -60,7 +69,7 @@ var $        = ($ instanceof Object) ? $ : {};
       for (var enemy in this.enemies){
         if (this.enemies.hasOwnProperty(enemy)){
           var thisEnemy = this.enemies[enemy];
-          $("#combatModal .enemies").append("<div class='enemy' data-id='" + thisEnemy._id + "'" + " >" +
+          $("#combatModal .enemyContainer").append("<div class='enemy' data-id='" + thisEnemy._id + "'" + " >" +
                                             "<img src='" + thisEnemy.image.image.src + "' />" +
                                             "<div class='healthBar'>" +
                                             "<div class='healthContainer'>" +
@@ -104,7 +113,9 @@ var $        = ($ instanceof Object) ? $ : {};
 
     this.start = function(){
       if (!isServer){
-        this.message("Select an attack");
+        var msg = (this.players[this.player].attacks.length === 0) ?
+                "Waiting for other players because you have no equipeed attacks." : "Select an attack.";
+        this.message(msg);
         this.state = "attack";
       }
     };
@@ -122,6 +133,10 @@ var $        = ($ instanceof Object) ? $ : {};
           break;
         }
       }
+      if (_.isUndefined(this.players[player].attacks, "length") ||
+                         this.players[player].attacks.length < attackNum){
+        add = false;
+      }
       if (add){
         // new attack so add it
         this.playerAttacks.push({player: player, target: target,
@@ -129,8 +144,7 @@ var $        = ($ instanceof Object) ? $ : {};
                                  attack: dragons.attacks[this.players[player].attacks[attackNum]]});
       }
 
-      console.log("attack", add, this.playerAttacks.length, this.playerCount);
-
+      console.log("checking", this.playerAttacks.length, this.playerCount);
       if (isServer && this.playerAttacks.length === this.playerCount){
         // ready to fight
         return this.fight();
@@ -239,13 +253,18 @@ var $        = ($ instanceof Object) ? $ : {};
     // resets combat UI to move to next round
     this.reset = function(){
       $("#combatModal .selected").removeClass("selected");
-      $("#combatModal .messages").text("Select an attack.");
+      var msg = (this.players[this.player].attacks.length === 0) ?
+                "Waiting for other players because you have no equipeed attacks." : "Select an attack.";
+      this.message(msg);
       this.state = "attack";
     };
 
     this.addPlayer = function(player){
       this.players[player._id] = player;
-      this.playerCount++;
+      // only add to the player count if they have attacks equipped
+      if (!_.isUndefined(player.attacks) && player.attacks.length !== 0){
+        this.playerCount++;
+      }
     };
 
   };

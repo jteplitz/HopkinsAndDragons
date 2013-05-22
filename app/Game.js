@@ -129,10 +129,10 @@
         var combatIndex = null;
         checkEnemy: for (i = 0; i < this.enemies.length; i++){
           var thisEnemy = this.enemies[i], thisPlayer = this.players[player];
-          if ((thisEnemy.x + (thisEnemy.width / 2)) - thisEnemy.pullRadius < thisPlayer.x + thisPlayer.width &&
-              (thisEnemy.x + (thisEnemy.width / 2)) + thisEnemy.pullRadius > thisPlayer.x &&
-              (thisEnemy.y + (thisEnemy.height / 2)) - thisEnemy.pullRadius < thisPlayer.y + thisPlayer.height &&
-              (thisEnemy.y + (thisEnemy.height / 2)) + thisEnemy.pullRadius > thisPlayer.y){
+          if ((thisEnemy.x + (thisEnemy.width / 2)) - thisEnemy.pullRadius * 2 < thisPlayer.x + thisPlayer.width &&
+              (thisEnemy.x + (thisEnemy.width / 2)) + thisEnemy.pullRadius * 2 > thisPlayer.x &&
+              (thisEnemy.y + (thisEnemy.height / 2)) - thisEnemy.pullRadius * 2 < thisPlayer.y + thisPlayer.height &&
+              (thisEnemy.y + (thisEnemy.height / 2)) + thisEnemy.pullRadius * 2 > thisPlayer.y){
             this.players[player].inCombat = true;
             // we're in this enemies pull radius
             if (combatIndex === null){
@@ -423,18 +423,35 @@
 
   // saves game state in db
   _ptype.saveGame = function(cb){
+    var i = 0;
     // update positions
-    for (var i = 0; i < this.dbGame.players.length; i++){
+    for (i = 0; i < this.dbGame.players.length; i++){
       var player = this.dbGame.players[i];
       if (_.has(this.players, player._id)){
         player.x = this.players[player._id].x;
         player.y = this.players[player._id].y;
         player.attacks = this.players[player._id].attacks;
+        player.health  = this.players[player._id].health;
         // TODO save level
       }
     }
+
+    var dbEnemies = [];
+    for (i = 0; i < this.enemies.length; i++){
+      var thisEnemy = this.enemies[i];
+      dbEnemies.push({
+        baseEnemy: thisEnemy.gameData.baseEnemy._id,
+        x: thisEnemy.x,
+        y: thisEnemy.y,
+        pullRadius: thisEnemy.pullRadius,
+        health: thisEnemy.health
+      });
+    }
+    this.dbGame.enemies = dbEnemies;
+
     this.dbGame.fog = this.fogCanvas.outputPng();
     this.dbGame.markModified("players");
+    this.dbGame.markModified("enemies");
 
     this.dbGame.save(cb);
   };

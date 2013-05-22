@@ -69,13 +69,15 @@
     baseEnemy: ObjectId,
     x: Number,
     y: Number,
-    pullRadius: Number
+    pullRadius: Number,
+    health: Number
   });
 
   var Player = new Schema({
     name: String,
     image: String,
     attacks: Mixed,
+    health: Number,
     x: Number,
     y: Number,
     level: Number,

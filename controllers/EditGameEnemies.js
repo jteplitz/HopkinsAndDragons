@@ -7,8 +7,6 @@
       async     = require("async"),
 
       EditGameEnemiesCtrl, _ptype, addBaseInfo,
-
-
       getGame, getBaseEnemies;
 
   EditGameEnemiesCtrl = function(user, gameId, schemas){
@@ -59,6 +57,7 @@
       var enemy = new self.schemas.Enemy({
         x: enemyData.x,
         y: enemyData.y,
+        health: enemyData.baseEnemy.health,
         pullRadius: enemyData.pullRadius,
         baseEnemy: enemyData.baseEnemy
       });

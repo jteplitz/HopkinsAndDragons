@@ -86,10 +86,19 @@
       }
       // add the other players
       for (var player in data){
+        // load up their first two attacks as defaults
         if (data.hasOwnProperty(player) && player !== "game"){
+          var attackList = self.conf.get("players:" + player + ":attacks"), attacks = [];
+          for (var attack in attackList){
+            if (attackList.hasOwnProperty(attack) && attacks.length < 2){
+              attacks.push(attack);
+            }
+          }
           game.players.push(new self.schemas.Player({
             x: 20,
             y: 20,
+            attacks: attacks,
+            health: 50,
             name: player,
             image: self.conf.get("players:" + player + ":image"),
             owner: data[player]._id,
