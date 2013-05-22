@@ -84,6 +84,7 @@
     for (i = 0; i < this.gameInfo.players.length; i++){
       var currPlayer = this.gameInfo.players[i];
       var player = new dragons.gameElements.Player(null, 50, 50, currPlayer.x, currPlayer.y, currPlayer.name, currPlayer._id);
+      player.health = currPlayer.health;
       this.canvas.addElement(player);
       this.players[currPlayer._id] = this.canvas.elements[this.canvas.elements.length - 1];
       this.players[currPlayer._id].attacks = currPlayer.attacks;
@@ -94,6 +95,7 @@
       var currEnemy = this.gameInfo.enemies[i];
       //console.log("enemy data", currEnemy);
       var enemy = new dragons.gameElements.Enemy(null, 50, 50, currEnemy.x * 2, currEnemy.y * 2, currEnemy.pullRadius, currEnemy._id);
+      enemy.health = currEnemy.health;
       enemy.gameData = currEnemy;
       this.enemies.push(enemy);
     }
@@ -169,7 +171,7 @@
                 // we're already in combat so add this enemy to the combat
                 // make sure that this enemy isn't in combat somewhere else
                 for (j = 0; j < combats.length; j++){
-                  if (_.has(combats[j].enemies, this.enemies[i]._id)){
+                  if (j !== combatIndex && _.has(combats[j].enemies, this.enemies[i]._id)){
                     // merge the combats
                     combats = mergeCombats(combats, combatIndex, j);
                     combatIndex = combats.length - 1;
@@ -227,15 +229,15 @@
 
   cleanCombatData = function(combat){
     // clean up the players and enemies
-    var players = [], enemies = [];
+    var players = {}, enemies = {};
     for (var player in combat.players){
       if (combat.players.hasOwnProperty(player)){
-        players.push(player);
+        players[player] = {health: combat.players[player].health};
       }
     }
     for (var enemy in combat.enemies){
       if (combat.enemies.hasOwnProperty(enemy)){
-        enemies.push(enemy);
+        enemies[enemy] = {health: combat.enemies[enemy].health};
       }
     }
     return {players: players, enemies: enemies};
@@ -441,8 +443,8 @@
       var thisEnemy = this.enemies[i];
       dbEnemies.push({
         baseEnemy: thisEnemy.gameData.baseEnemy._id,
-        x: thisEnemy.x,
-        y: thisEnemy.y,
+        x: thisEnemy.x / 2,
+        y: thisEnemy.y / 2,
         pullRadius: thisEnemy.pullRadius,
         health: thisEnemy.health
       });

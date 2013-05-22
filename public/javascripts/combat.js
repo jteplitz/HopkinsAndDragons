@@ -24,8 +24,9 @@ var $        = ($ instanceof Object) ? $ : {};
     // count the players
     for (var player in this.players){
       if (this.players.hasOwnProperty(player)){
-        console.log("checking player health", _.isUndefined(this.players[player].health));
+        console.log("checking for null", this.players[player].health, _.isNull(this.players[player].health));
         if (_.isUndefined(this.players[player].health) || _.isNull(this.players[player].health)){
+          console.log("setting health at 50");
           this.players[player].health = 50;
         }
 
@@ -43,6 +44,7 @@ var $        = ($ instanceof Object) ? $ : {};
         if (_.isUndefined(thisEnemy.health) || _.isNull(thisEnemy.health)){
           thisEnemy.health = thisEnemy.gameData.baseEnemy.health;
         }
+        console.log("enemy has health", thisEnemy.health);
       }
     }
 
@@ -51,15 +53,17 @@ var $        = ($ instanceof Object) ? $ : {};
       $("#combatModal .players").empty();
       $("#combatModal .enemyContainer").empty();
 
+      var width;
       // load the players
       for (var player in this.players){
         if (this.players.hasOwnProperty(player)){
           var thisPlayer = this.players[player];
+          width = ((thisPlayer.health / 50) * 100) + "%";
           $("#combatModal .players").append("<div class='player' data-id='" + thisPlayer._id + "'>" +
                                             "<img src='" + thisPlayer.image.src + "' />" +
                                             "<div class='healthBar'>" +
                                             "<div class='healthContainer'>" +
-                                            "<div class='healthMeter'></div>" +
+                                            "<div class='healthMeter' style='width: " + width + ";'></div>" +
                                             "</div></div>" +
                                             "</div>");
         }
@@ -69,11 +73,13 @@ var $        = ($ instanceof Object) ? $ : {};
       for (var enemy in this.enemies){
         if (this.enemies.hasOwnProperty(enemy)){
           var thisEnemy = this.enemies[enemy];
+          width = ((thisEnemy.health / thisEnemy.gameData.baseEnemy.health) * 100) + "%";
           $("#combatModal .enemyContainer").append("<div class='enemy' data-id='" + thisEnemy._id + "'" + " >" +
                                             "<img src='" + thisEnemy.image.image.src + "' />" +
                                             "<div class='healthBar'>" +
                                             "<div class='healthContainer'>" +
-                                            "<div class='healthMeter'></div>" +
+                                            "<div class='healthMeter' style='width: " + width + ";'>" +
+                                            "</div>" +
                                             "</div></div>" +
                                             "</div>");
         }

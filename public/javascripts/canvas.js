@@ -106,6 +106,7 @@ checkForWall;
       };
     },
     Enemy: function(image, width, height, x, y, pullRadius, id){
+      this.health = null;
       dragons.gameElements.element.call(this, width, height, x, y, id);
 
       this.pullRadius = pullRadius;
@@ -125,6 +126,7 @@ checkForWall;
       this.lastRecievedInput = 0;
       this.lastHandledInput  = 0;
       this.inCombat          = false;
+      this.health = null;
 
       this.update = function(canvas){
         var dx = 0, dy = 0;

@@ -387,14 +387,21 @@
   handleCombatStart = function(data){
     var combatPlayers = {}, combatEnemies = {}, i;
     // get the full enemy and player information from the ids
-    for (i = 0; i < data.players.length; i++){
-      combatPlayers[data.players[i]] = players[data.players[i]];
+    for (var player in data.players){
+      if (data.players.hasOwnProperty(player)){
+        players[player].health = data.players[player].health;
+        combatPlayers[player] = players[player];
+      }
     }
-    for (i = 0; i < data.enemies.length; i++){
-      // enemies array really should be object
-      for (var j = 0; j < enemies.length; j++){
-        if (enemies[j]._id === data.enemies[i]){
-          combatEnemies[data.enemies[i]] = enemies[j];
+
+    for (var enemy in data.enemies){
+      if (data.enemies.hasOwnProperty(enemy)){
+        // enemies array really should be object
+        for (i = 0; i < enemies.length; i++){
+          if (enemies[i]._id === enemy){
+            enemies[i].health = data.enemies[enemy].health;
+            combatEnemies[enemy] = enemies[i];
+          }
         }
       }
     }
