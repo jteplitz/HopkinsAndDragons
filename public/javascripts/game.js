@@ -8,14 +8,15 @@
       updatePhysics, handleInput, createMovementVector, ping, handlePing,
       handleServerUpdate, updateTimers, processServerUpdates, handleServerError,
       startDraggingAttack, dragAttack, stopDraggingAttack,
-      handleCombatStart, handleAttackSelect, handleTargetSelect, handleFight, handleCombatJoin,
+      handleCombatStart, handleAttackSelect, handleTargetSelect, handleFight, handleCombatJoin, handleCombatOver,
+      endCombat,
       checkForCombat, displayMessage,
       updateFrameRate, getEnemy,
       lerp, vLerp;
 
   // globals
   var canvas, fogCanvas, canvasContainer = {}, mapInfo = {}, mapPieces = [], socket,
-      players = {}, yourGuy = null, keyboard, combatSession = null, enemies = [],
+      players = {}, yourGuy = null, keyboard, combatSession = null, enemies = [], combatOver = null,
       playersLoading = 0, active = false,
       draggingAttack = false, pendingMessages = [],
       // physics globals
@@ -96,6 +97,7 @@
     socket.on("combatStart", handleCombatStart);
     socket.on("fight", handleFight);
     socket.on("combatJoin", handleCombatJoin);
+    socket.on("combatOver", handleCombatOver);
 
     setInterval(updateTimers, 4);
     setupPlayers();
@@ -385,6 +387,9 @@
 
   // combat
   handleCombatStart = function(data){
+    if (combatSession === null){
+      checkForCombat();
+    }
     var combatPlayers = {}, combatEnemies = {}, i;
     // get the full enemy and player information from the ids
     for (var player in data.players){
@@ -412,6 +417,38 @@
     combatSession.start();
   };
 
+  handleCombatOver = function(data){
+    if (pendingMessages.length !== 0){
+      combatOver = data;
+    } else {
+      endCombat(data);
+    }
+  };
+
+  endCombat = function(data){
+    // first update all the healths to the latest values
+    for (var player in data.players){
+      if (data.players.hasOwnProperty(player)){
+        players[player].health = data.players[player].health;
+      }
+    }
+
+    for (var enemy in data.enemies){
+      if (data.enemies.hasOwnProperty(enemy)){
+        // enemies array really should be object
+        for (var i = 0; i < enemies.length; i++){
+          if (enemies[i]._id === enemy){
+            enemies[i].health = data.enemies[enemy].health;
+          }
+        }
+      }
+    }
+    
+    combatSession.end();
+    combatSession = null;
+    combatOver    = null;
+  };
+
   handleFight = function(data){
     // display the messages
     pendingMessages = data.messages;
@@ -423,6 +460,10 @@
   // displays the latest pending message and recalls itself if another is needed
   displayMessage = function(){
     if (pendingMessages.length === 0){
+      if (combatOver !== null){
+        // combat is over
+        return endCombat(combatOver);
+      }
       // no message. Go to next round
       combatSession.reset();
       return;
@@ -446,6 +487,17 @@
       for (var enemy in message.enemyHealth){
         if (message.enemyHealth.hasOwnProperty(enemy)){
           combatSession.enemies[enemy].health = message.enemyHealth[enemy];
+
+          if (message.enemyHealth[enemy] <= 0){
+            // remove this enemy from the map because it's dead
+            canvas.removeElement(enemy);
+            for (var i = 0; i < enemies.length; i++){
+              if (enemies[i]._id === enemy){
+                enemies.splice(i, 1);
+                break;
+              }
+            }
+          }
         }
       }
     }
@@ -504,6 +556,8 @@
   handleAttackSelect = function(e){
     var targetNum = ($(this).hasClass("attack1")) ? 0 : 1;
     if (yourGuy.attacks.length + 1 < targetNum){ return } // not a valid selection
+    
+    if (yourGuy.health <= 0){ return } // can't attack if dead
 
     if (combatSession.state !== "attack"){ return } // only select the attack if that's the stage we're in
 
@@ -514,6 +568,9 @@
   handleTargetSelect = function(e){
     if (combatSession.state !== "target"){ return } // only select the enemy if that's the stage we're in
     var target = $(this).attr("data-id");
+
+    // find the enemy
+    if (getEnemy(target).health <= 0){ return } // can't attack a dead enemy
 
     // find the attack we selected earlier
     var attacks = $("#combatModal .attack"), attackNum;

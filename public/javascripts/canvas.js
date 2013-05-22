@@ -54,6 +54,15 @@ checkForWall;
       }
     };
 
+    this.removeElement = function(id){
+      for (var i = 0; i < this.elements.length; i++){
+        if (String(this.elements[i]._id) === id){
+          this.elements.splice(i, 1);
+          return;
+        }
+      }
+    };
+
     this.setMap = function(organizedMap){
       this.organizedMap = organizedMap;
     };

@@ -58,12 +58,15 @@ var $        = ($ instanceof Object) ? $ : {};
       for (var player in this.players){
         if (this.players.hasOwnProperty(player)){
           var thisPlayer = this.players[player];
-          width = ((thisPlayer.health / 50) * 100) + "%";
+          width = ((thisPlayer.health / 50) * 100);
+          if (width < 0){
+            width = 0;
+          }
           $("#combatModal .players").append("<div class='player' data-id='" + thisPlayer._id + "'>" +
                                             "<img src='" + thisPlayer.image.src + "' />" +
                                             "<div class='healthBar'>" +
                                             "<div class='healthContainer'>" +
-                                            "<div class='healthMeter' style='width: " + width + ";'></div>" +
+                                            "<div class='healthMeter' style='width: " + width + "%;'></div>" +
                                             "</div></div>" +
                                             "</div>");
         }
@@ -73,12 +76,16 @@ var $        = ($ instanceof Object) ? $ : {};
       for (var enemy in this.enemies){
         if (this.enemies.hasOwnProperty(enemy)){
           var thisEnemy = this.enemies[enemy];
-          width = ((thisEnemy.health / thisEnemy.gameData.baseEnemy.health) * 100) + "%";
+          width = ((thisEnemy.health / thisEnemy.gameData.baseEnemy.health) * 100);
+          if (width < 0){
+            width = 0;
+          }
+          console.log("setting enemy width", width, thisEnemy.health);
           $("#combatModal .enemyContainer").append("<div class='enemy' data-id='" + thisEnemy._id + "'" + " >" +
                                             "<img src='" + thisEnemy.image.image.src + "' />" +
                                             "<div class='healthBar'>" +
                                             "<div class='healthContainer'>" +
-                                            "<div class='healthMeter' style='width: " + width + ";'>" +
+                                            "<div class='healthMeter' style='width: " + width + "%;'>" +
                                             "</div>" +
                                             "</div></div>" +
                                             "</div>");
@@ -128,6 +135,9 @@ var $        = ($ instanceof Object) ? $ : {};
 
     this.attack = function(player, attackNum, target){
       var add = true;
+      if (player.health <= 0){
+        return; // can't attack if you are dead
+      }
       // make sure they don't already have an attack
       for (var i = 0; i < this.playerAttacks.length; i++){
         if (this.playerAttacks[i].player === player){
@@ -150,7 +160,6 @@ var $        = ($ instanceof Object) ? $ : {};
                                  attack: dragons.attacks[this.players[player].attacks[attackNum]]});
       }
 
-      console.log("checking", this.playerAttacks.length, this.playerCount);
       if (isServer && this.playerAttacks.length === this.playerCount){
         // ready to fight
         return this.fight();
@@ -164,6 +173,10 @@ var $        = ($ instanceof Object) ? $ : {};
       // simulate the enemy attacks
       for (var enemy in this.enemies){
         if (this.enemies.hasOwnProperty(enemy)){
+          if (this.enemies[enemy].health <= 0){
+            // can't attack if they're dead
+            continue;
+          }
           var theseAttacks = this.enemies[enemy].gameData.baseEnemy.attacks;
           var attack = null;
           attack = pickAttack(theseAttacks);
@@ -176,7 +189,15 @@ var $        = ($ instanceof Object) ? $ : {};
       
       // players first
       for (i = 0; i < this.playerAttacks.length; i++){
-        var castMsg = this.players[this.playerAttacks[i].player].name + " casts " +
+        var castMsg = "";
+        
+        if (this.players[this.playerAttacks[i].player].health <= 0){
+          castMsg += "In his dying moments ";
+        }
+
+        console.log("casting at", this.playerAttacks[i].target, this.enemies);
+
+        castMsg += this.players[this.playerAttacks[i].player].name + " casts " +
                       this.playerAttacks[i].name + " at " +
                       this.enemies[this.playerAttacks[i].target].gameData.baseEnemy.name;
         // check for hit
@@ -193,7 +214,7 @@ var $        = ($ instanceof Object) ? $ : {};
           });
           if (this.enemies[this.playerAttacks[i].target].health <= 0){
             messages.push({msg: "You have defeated " + this.enemies[this.playerAttacks[i].target].gameData.baseEnemy.name + "."});
-            delete this.enemies[this.playerAttacks[i].target];
+            console.log("deleting", this.enemies[this.playerAttacks[i].target]);
           }
         } else {
           // not a hit
@@ -203,8 +224,12 @@ var $        = ($ instanceof Object) ? $ : {};
 
       // now the enemies
       for (i = 0; i < this.enemyAttacks.length; i++){
+        var enemyMsg = "";
         var thisAttack = this.enemyAttacks[i];
-        var enemyMsg = thisAttack.enemy.gameData.baseEnemy.name + " " + thisAttack.attack.name + " " + this.players[thisAttack.target].name;
+        if (thisAttack.enemy.health <= 0){
+          enemyMsg += "In its dying moments ";
+        }
+        enemyMsg += thisAttack.enemy.gameData.baseEnemy.name + " " + thisAttack.attack.name + " " + this.players[thisAttack.target].name;
         
         // check for hit
         if (Math.random() < (thisAttack.attack.hitChance / 100)){
@@ -261,6 +286,9 @@ var $        = ($ instanceof Object) ? $ : {};
       $("#combatModal .selected").removeClass("selected");
       var msg = (this.players[this.player].attacks.length === 0) ?
                 "Waiting for other players because you have no equipeed attacks." : "Select an attack.";
+      if (this.players[this.player].health <= 0){
+        msg = "You have been defeated.";
+      }
       this.message(msg);
       this.state = "attack";
     };
@@ -270,6 +298,22 @@ var $        = ($ instanceof Object) ? $ : {};
       // only add to the player count if they have attacks equipped
       if (!_.isUndefined(player.attacks) && player.attacks.length !== 0){
         this.playerCount++;
+      }
+    };
+
+    this.end = function(){
+      if (!isServer){
+        $("#combatModal").modal("hide");
+        $("#dungeonMusic")[0].play();
+      }
+
+      // reset player healths as long as they're not dead
+      for (var player in this.players){
+        if (this.players.hasOwnProperty(player)){
+          if (this.players[player].health >= 0){
+            this.players[player].health = 50;
+          }
+        }
       }
     };
 

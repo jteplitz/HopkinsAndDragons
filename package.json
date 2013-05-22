@@ -1,6 +1,6 @@
 {
   "name": "hopdragons",
-  "version": "0.0.65-2",
+  "version": "0.0.65-3",
   "engines": {
     "node": "0.8.x",
     "npm": "1.1.x"

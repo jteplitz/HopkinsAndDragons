@@ -237,6 +237,7 @@
     }
     for (var enemy in combat.enemies){
       if (combat.enemies.hasOwnProperty(enemy)){
+        console.log("adding", enemy);
         enemies[enemy] = {health: combat.enemies[enemy].health};
       }
     }
@@ -294,22 +295,36 @@
       // send data to all clients in the fight
 
       // only send over player and enemy health right now
+      var enemiesDead = true, playersDead = true;
       var playerInfo = {}, enemyInfo = {};
       for (player in combat.players){
         if (combat.players.hasOwnProperty(player)){
           playerInfo[player] = {health: combat.players[player].health};
+          if (combat.players[player].health >= 0){
+            playersDead = false;
+          }
         }
       }
 
       for (var enemy in combat.enemies){
         if (combat.enemies.hasOwnProperty(enemy)){
           enemyInfo[enemy] = {health: combat.enemies[enemy].health};
+          if (combat.enemies[enemy].health >= 0){
+            enemiesDead = false;
+          }
         }
       }
 
-      console.log("sending fight", this.sockets.clients(this.combats[this.combats.length - 1].roomId.length));
+      // check if all the players and / or enemies are dead
+
       this.sockets["in"](combat.roomId).emit("fight", {messages: messages, players: playerInfo,
                                                       enemies: enemyInfo});
+
+      if (enemiesDead || playersDead){
+        this.sockets["in"](combat.roomId).emit("combatOver", cleanCombatData(combat));
+        this.combats[i].end();
+        delete this.combats[i];
+      }
     }
   };
 
@@ -441,13 +456,19 @@
     var dbEnemies = [];
     for (i = 0; i < this.enemies.length; i++){
       var thisEnemy = this.enemies[i];
+      if (thisEnemy.health <= 0){
+        // don't save dead enemies
+        continue;
+      }
       dbEnemies.push({
         baseEnemy: thisEnemy.gameData.baseEnemy._id,
         x: thisEnemy.x / 2,
         y: thisEnemy.y / 2,
         pullRadius: thisEnemy.pullRadius,
-        health: thisEnemy.health
+        health: thisEnemy.health,
+        _id: thisEnemy._id
       });
+      console.log("saving", dbEnemies[dbEnemies.length - 1]);
     }
     this.dbGame.enemies = dbEnemies;
 
