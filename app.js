@@ -135,4 +135,7 @@
       game = null;
     });
   };
+  process.on("uncaughtException", function(err){
+    console.trace(err);
+  });
 }());
