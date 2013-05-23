@@ -81,7 +81,8 @@
     x: Number,
     y: Number,
     level: Number,
-    owner: Number
+    owner: Number,
+    experience: Number
   });
 
   var StoryPoint = new Schema({

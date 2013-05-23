@@ -135,7 +135,8 @@ checkForWall;
       this.lastRecievedInput = 0;
       this.lastHandledInput  = 0;
       this.inCombat          = false;
-      this.health = null;
+      this.health            = null;
+      this.experience        = 0;
 
       this.update = function(canvas){
         var dx = 0, dy = 0;

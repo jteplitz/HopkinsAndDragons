@@ -1,9 +1,9 @@
 {
   "name": "hopdragons",
-  "version": "0.0.67-3",
+  "version": "0.0.67-5",
   "engines": {
-    "node": "0.8.x",
-    "npm": "1.1.x"
+    "node": "v0.8.x",
+    "npm": "1.2.x"
   },
   "private": true,
   "scripts": {
