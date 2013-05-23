@@ -28,7 +28,7 @@
   mongoose.connection.on("open", function(){
     sessionStore = new MongoStore({db: mongoose.connection.db});
     app.configure(function(){
-      app.set('port', process.env.PORT || 3000);
+      app.set('port', conf.get("PORT") || 3000);
       app.set('views', __dirname + '/templates');
       app.set('view engine', 'jade');
       app.use(express.favicon());
