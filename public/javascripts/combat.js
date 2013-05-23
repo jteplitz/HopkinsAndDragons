@@ -214,6 +214,8 @@ var $        = ($ instanceof Object) ? $ : {};
           });
           if (this.enemies[this.playerAttacks[i].target].health <= 0){
             messages.push({msg: "You have defeated " + this.enemies[this.playerAttacks[i].target].gameData.baseEnemy.name + "."});
+
+          // add experience to each player
             console.log("deleting", this.enemies[this.playerAttacks[i].target]);
           }
         } else {

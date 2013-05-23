@@ -137,6 +137,7 @@ checkForWall;
       this.inCombat          = false;
       this.health            = null;
       this.experience        = 0;
+      this.level             = 1;
 
       this.update = function(canvas){
         var dx = 0, dy = 0;
