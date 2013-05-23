@@ -18,11 +18,13 @@
   _ptype = gameServer.prototype;
 
   _ptype.joinGame = function(client, user, data, cb){
+    console.log("looking for game");
     var self = this, i,
         gameId = data.gameId;
 
     // make sure this is a valid join request
     self.schemas.Game.findOne({_id: gameId}, function(err, game){
+      console.log("found game");
       if (err){
         client.emit("error", {err: 500, msg: "Sorry, something went wrong while joining the game."});
         return cb({err: 500});

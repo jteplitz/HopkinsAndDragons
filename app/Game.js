@@ -20,6 +20,7 @@
           fog     = require("../public/javascripts/fog.js");
   
   Game = function(id, dbGame, gameInfo, sockets){
+    console.log("starting game");
     this.gameId    = id;
     this.randomId  = Math.random() * 100;
     this.dbGame    = dbGame;
@@ -57,7 +58,8 @@
     this.fogCanvas = new Canvas(mapSize.width, mapSize.height);
     this.fogCanvas = new fog.fogCanvas(this.fogCanvas, mapSize.width, mapSize.height,
                                        playerSight);
-    if (!_.isUndefined(gameInfo.fog)){
+    console.log(gameInfo.fog, _.isUndefined(gameInfo.fog));
+    if (!_.isUndefined(gameInfo.fog) && gameInfo.fog !== ""){
       var saveImage = new Canvas.Image();
       var fogArray = gameInfo.fog.split(",");
       saveImage.src = new Buffer(fogArray[fogArray.length - 1], "base64");

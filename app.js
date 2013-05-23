@@ -105,6 +105,7 @@
         client.emit("ping", data);
       });
       client.on("join", function(data){
+        console.log("got join request");
         game = gameServer.joinGame(client, session.user, data, function(err, joinedGame){
           if (err){ return client.emit("error", err); }
           console.log("joined game", joinedGame.randomId);
