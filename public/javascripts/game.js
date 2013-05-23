@@ -10,7 +10,7 @@
       startDraggingAttack, dragAttack, stopDraggingAttack,
       handleCombatStart, handleAttackSelect, handleTargetSelect, handleFight, handleCombatJoin, handleCombatOver,
       endCombat,
-      checkForCombat, displayMessage,
+      checkForCombat, checkForRevive, displayMessage,
       updateFrameRate, getEnemy,
       lerp, vLerp;
 
@@ -197,6 +197,7 @@
     pdte = new Date().getTime();
     canvas.update();
     checkForCombat();
+    checkForRevive();
   };
 
   handleServerUpdate = function(state){
@@ -295,6 +296,7 @@
     return function(){
       var player = new dragons.gameElements.Player(image, 50, 50, playerInfo.x, playerInfo.y, playerInfo.name, playerInfo._id);
       player.attacks = (_.has(playerInfo, "attacks")) ? playerInfo.attacks : [];
+      player.health  = playerInfo.health;
       playersLoading--;
       canvas.addElement(player);
       players[playerInfo._id] = canvas.elements[canvas.elements.length - 1];
@@ -305,10 +307,10 @@
         for (var i = 0; i < ((player.attacks.length < 2) ? player.attacks.length : 2); i++){
           $("#playerBar .attack" + (i + 1)).html("<img src='" + dragons.attacks[player.attacks[i]].icon + "' width='40px' height='40px' + />");
         }
-      }
-      if (!_.isNull(lastInputNum)){
-        yourGuy.lastRecievedInput = lastInputNum;
-        yourGuy.lastHandledInput  = lastInputNum;
+        if (!_.isNull(lastInputNum)){
+          yourGuy.lastRecievedInput = lastInputNum;
+          yourGuy.lastHandledInput  = lastInputNum;
+        }
       }
       if (playersLoading === 0){
         startGame();
@@ -319,6 +321,11 @@
   // stores inputs as they come in. Will also send them to the server immediatly
   handleInput = function(){
     if (!active){ return }
+
+    if (yourGuy.health <= 0){
+      // dead people can't move
+      return;
+    }
 
     var dx  = 0, dy = 0;
     var inputs = [];
@@ -447,6 +454,12 @@
     combatSession.end();
     combatSession = null;
     combatOver    = null;
+
+    if (yourGuy.health <= 0){
+      // you're dead :(
+      $("#messageOverlay .message").text("You have been defeated. Any player that is not in combat may walk over to you to revive you.");
+      $("#messageOverlay").show();
+    }
   };
 
   handleFight = function(data){
@@ -618,6 +631,25 @@
         canvasContainer.scrollTop -= 200;
       }
       $("#canvasContainer").animate({scrollTop: canvasContainer.scrollTop}, 200);
+    }
+  };
+
+  checkForRevive = function(){
+    if (yourGuy.health <= 0){
+      for (var player in players){
+        if (players.hasOwnProperty(player)){
+          if (player._id !== yourGuy._id){
+            var checkPlayer = players[player];
+            if (checkPlayer.x + checkPlayer.width > yourGuy.x &&
+                checkPlayer.x < yourGuy.x + yourGuy.width     &&
+                checkPlayer.y + checkPlayer.height > yourGuy.y &&
+                checkPlayer.y < yourGuy.y + yourGuy.height){
+              $("#messageOverlay").hide();
+              yourGuy.health = 50;
+            }
+          }
+        }
+      }
     }
   };
 

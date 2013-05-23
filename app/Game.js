@@ -122,6 +122,27 @@
       }
     }
     this.checkForCombat();
+    this.checkForRevive();
+  };
+
+  _ptype.checkForRevive = function(){
+    for (var player in this.players){
+      if (this.players.hasOwnProperty(player) && this.players[player].health <= 0){
+        // here's a dead guy. See if he can be revived
+        for (var checkId in this.players){
+          if (this.players.hasOwnProperty(checkId) && checkId !== player){
+            var checkPlayer = this.players[checkId];
+            var yourGuy     = this.players[player];
+            if (checkPlayer.x + checkPlayer.width > yourGuy.x &&
+                checkPlayer.x < yourGuy.x + yourGuy.width     &&
+                checkPlayer.y + checkPlayer.height > yourGuy.y &&
+                checkPlayer.y < yourGuy.y + yourGuy.height){
+              yourGuy.health = 50; // revive him
+            }
+          }
+        }
+      }
+    }
   };
 
   _ptype.checkForCombat = function(){
@@ -415,6 +436,10 @@
   _ptype.handleInput = function(data, client){
     if (client.player_id === null){ return; } // owners can't play
     var player = this.players[client.player_id];
+    if (player.health <= 0){
+      // dead people can't move
+      return;
+    }
     player.inputs.push({
       inputs: data.inputs,
       seq: data.seq,
